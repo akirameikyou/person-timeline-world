@@ -1,0 +1,347 @@
+{
+  "artifact": "PHASE8_PERSON_CANDIDATE_INTAKE",
+  "version": "0.1",
+  "date": "2026-09-24",
+  "status": "PILOT_VERIFIED_PENDING_COLLECTION_ADMISSION",
+  "basis": [
+    "Phase 7 Japan Event ↔ Person Reverse Extraction & Coverage Audit",
+    "PERSON_SCHEMA_V1.0 frozen person schema",
+    "Person Timeline Core Admission Pilot v0.1",
+    "external source verification completed in Phase 8"
+  ],
+  "control": {
+    "canonicalPersonRecordsCreated": false,
+    "personIdsAssigned": false,
+    "personSchemaChanged": false,
+    "admissionFinalized": false,
+    "rule": "Event-derived named actors become person-side candidates. Verification does not equal automatic admission."
+  },
+  "candidates": [
+    {
+      "candidateId": "PCH-001",
+      "eventSource": "JPS-001",
+      "label": "Huiguo / Keika (恵果)",
+      "entityType": "historical",
+      "verificationStatus": "PERSON_SIDE_VERIFIED",
+      "canonicalPersonId": null,
+      "dateClaims": [
+        {
+          "startYear": 746,
+          "endYear": 805,
+          "basis": "life",
+          "precision": "year",
+          "certainty": "documented",
+          "sourceRefs": [
+            "SRC-HUIGUO-JSTAGE-01",
+            "SRC-HUIGUO-JAPANSEARCH-01"
+          ]
+        }
+      ],
+      "dateVariance": [
+        {
+          "claim": "746–805",
+          "support": "J-STAGE study and Keio Object Hub / Japan Search entry",
+          "status": "preferred_pilot_claim"
+        },
+        {
+          "claim": "746–806",
+          "support": "secondary web source encountered during search",
+          "status": "retain_as_variant_not_preferred"
+        }
+      ],
+      "geography": {
+        "regionPrimary": "Tang China / Chang'an",
+        "regionsAssociated": [
+          "East Asia"
+        ],
+        "countryModern": [
+          "China"
+        ],
+        "historicalPolity": [
+          "Tang dynasty"
+        ]
+      },
+      "anchorCandidates": [
+        "regional",
+        "domain",
+        "network",
+        "tradition_knowledge"
+      ],
+      "observationValues": [
+        "religion",
+        "knowledge_transmission",
+        "mediation_translation",
+        "interface_between_societies"
+      ],
+      "evidenceForms": [
+        "authored_text",
+        "later_historical_record"
+      ],
+      "sourceLineages": [
+        {
+          "sourceId": "SRC-HUIGUO-JSTAGE-01",
+          "lineageId": "LINE-HUIGUO-KUKAI-TEXT",
+          "dependencyType": "shared_tradition",
+          "sourcePosition": "interested",
+          "note": "Academic study discusses Kūkai's record of receiving both traditions from Huiguo; this is not independent corroboration of every biographical detail."
+        },
+        {
+          "sourceId": "SRC-HUIGUO-JAPANSEARCH-01",
+          "lineageId": "LINE-HUIGUO-LATER-IMAGE",
+          "dependencyType": "derivative",
+          "sourcePosition": "descriptive",
+          "note": "Keio Object Hub / Japan Search records a later portrait and biographical metadata."
+        }
+      ],
+      "distinctObservation": "Makes the Tang-to-Japan transfer of esoteric Buddhist knowledge observable as an external teacher/intermediary rather than only through Kūkai's Japanese-side record.",
+      "collectionAdmissionDisposition": "PENDING_COLLECTION_AUDIT",
+      "openItems": [
+        "Resolve canonical name variant policy for 恵果 / Huiguo / Keika.",
+        "Preserve date variance without collapsing it into false precision.",
+        "Obtain a broader person-level source set before publication."
+      ],
+      "sourceRefs": [
+        "SRC-HUIGUO-JSTAGE-01",
+        "SRC-HUIGUO-JAPANSEARCH-01"
+      ]
+    },
+    {
+      "candidateId": "PCH-002",
+      "eventSource": "JPS-005",
+      "label": "Abe Masahiro (阿部正弘)",
+      "entityType": "historical",
+      "verificationStatus": "PERSON_SIDE_VERIFIED",
+      "canonicalPersonId": null,
+      "dateClaims": [
+        {
+          "startYear": 1819,
+          "endYear": 1857,
+          "basis": "life",
+          "precision": "year",
+          "certainty": "documented",
+          "sourceRefs": [
+            "SRC-ABE-NDL-AUTH-01"
+          ]
+        }
+      ],
+      "geography": {
+        "regionPrimary": "Japan / Fukuyama domain",
+        "regionsAssociated": [
+          "Edo Japan"
+        ],
+        "countryModern": [
+          "Japan"
+        ],
+        "historicalPolity": [
+          "Edo shogunate",
+          "Fukuyama Domain"
+        ]
+      },
+      "anchorCandidates": [
+        "regional",
+        "domain",
+        "network"
+      ],
+      "observationValues": [
+        "governance",
+        "diplomacy",
+        "mediation_translation",
+        "interface_between_societies"
+      ],
+      "evidenceForms": [
+        "written_record",
+        "later_historical_record"
+      ],
+      "sourceLineages": [
+        {
+          "sourceId": "SRC-ABE-NDL-AUTH-01",
+          "lineageId": "LINE-ABE-NDL-AUTHORITY",
+          "dependencyType": "derivative",
+          "sourcePosition": "descriptive",
+          "note": "NDL authority establishes identity, life dates, and role as Fukuyama domain lord."
+        },
+        {
+          "sourceId": "SRC-PERRY-NDL-01",
+          "lineageId": "LINE-PERRY-NDL-HISTORY",
+          "dependencyType": "derivative",
+          "sourcePosition": "descriptive",
+          "note": "NDL modern-Japan history identifies Abe as receiving US documents, arranging Japanese translations, and soliciting opinions."
+        }
+      ],
+      "distinctObservation": "Makes the domestic governance and information-processing side of the 1853–1854 diplomatic sequence observable: receipt of foreign documents, translation, and circulation of opinions.",
+      "collectionAdmissionDisposition": "PENDING_COLLECTION_AUDIT",
+      "openItems": [
+        "Verify fuller person-level bibliography and geographic details.",
+        "Separate Abe's own documented actions from later interpretive descriptions.",
+        "Check redundancy with other bakufu officials only at collection-audit stage."
+      ],
+      "sourceRefs": [
+        "SRC-ABE-NDL-AUTH-01",
+        "SRC-PERRY-NDL-01"
+      ]
+    },
+    {
+      "candidateId": "PCH-003",
+      "eventSource": "JPS-005",
+      "label": "Hayashi Fukusai (林復斎 / 林韑)",
+      "entityType": "historical",
+      "verificationStatus": "PERSON_SIDE_VERIFIED",
+      "canonicalPersonId": null,
+      "dateClaims": [
+        {
+          "startYear": 1800,
+          "endYear": 1859,
+          "basis": "life",
+          "precision": "year",
+          "certainty": "documented",
+          "sourceRefs": [
+            "SRC-HAYASHI-NDL-01",
+            "SRC-HAYASHI-WASEDA-01"
+          ]
+        }
+      ],
+      "dateVariance": [
+        {
+          "claim": "1800–1859",
+          "support": "NDL authority-linked bibliographic records and Waseda Library record",
+          "status": "preferred_pilot_claim"
+        },
+        {
+          "claim": "1801–1859",
+          "support": "secondary academic source encountered during search",
+          "status": "retain_as_variant_not_preferred"
+        }
+      ],
+      "geography": {
+        "regionPrimary": "Japan / Edo",
+        "regionsAssociated": [
+          "Edo Japan"
+        ],
+        "countryModern": [
+          "Japan"
+        ],
+        "historicalPolity": [
+          "Edo shogunate"
+        ]
+      },
+      "anchorCandidates": [
+        "regional",
+        "domain",
+        "network"
+      ],
+      "observationValues": [
+        "governance",
+        "diplomacy",
+        "interface_between_societies"
+      ],
+      "evidenceForms": [
+        "written_record",
+        "authored_text"
+      ],
+      "sourceLineages": [
+        {
+          "sourceId": "SRC-HAYASHI-NDL-01",
+          "lineageId": "LINE-HAYASHI-NDL",
+          "dependencyType": "derivative",
+          "sourcePosition": "descriptive",
+          "note": "NDL bibliographic record identifies 林復斎, 1800–1859, as author of 墨夷応接録."
+        },
+        {
+          "sourceId": "SRC-PERRY-NDL-01",
+          "lineageId": "LINE-PERRY-NDL-HISTORY",
+          "dependencyType": "derivative",
+          "sourcePosition": "descriptive",
+          "note": "NDL modern-Japan history identifies Hayashi Fukusai among bakufu representatives negotiating with Perry."
+        },
+        {
+          "sourceId": "SRC-HAYASHI-WASEDA-01",
+          "lineageId": "LINE-HAYASHI-WASEDA-OBJECT",
+          "dependencyType": "derivative",
+          "sourcePosition": "descriptive",
+          "note": "Waseda Library record independently identifies 林復斎 as 林韑, 1800–1859."
+        }
+      ],
+      "distinctObservation": "Makes the institutional negotiation side of the Japan–US treaty sequence observable through a named Japanese representative whose authored record is itself a source object.",
+      "collectionAdmissionDisposition": "PENDING_COLLECTION_AUDIT",
+      "openItems": [
+        "Preserve 1800–1859 vs 1801–1859 as a date-variance note until a canonical date policy is applied.",
+        "Verify how the authored record should be represented in source lineage and source position.",
+        "Check collection-level redundancy with other treaty negotiators before any default-view decision."
+      ],
+      "sourceRefs": [
+        "SRC-HAYASHI-NDL-01",
+        "SRC-PERRY-NDL-01",
+        "SRC-HAYASHI-WASEDA-01"
+      ]
+    }
+  ],
+  "intakeConclusion": {
+    "result": "All three Phase 7 named candidates pass a limited person-side identity/time/evidence verification gate for continued staging.",
+    "notEquivalentToAdmission": true,
+    "nextStep": "Send candidate records into the collection audit; assign canonical Person IDs only after collection-level review."
+  },
+  "sources": [
+    {
+      "sourceId": "SRC-HUIGUO-JSTAGE-01",
+      "title": "空海のみた恵果の密教",
+      "url": "https://www.jstage.jst.go.jp/article/chisangakuho/65/0/65_209/_article/-char/ja",
+      "type": "academic_article",
+      "supports": [
+        "Huiguo 746–805",
+        "Kūkai received esoteric Buddhist transmission from Huiguo"
+      ]
+    },
+    {
+      "sourceId": "SRC-HUIGUO-JAPANSEARCH-01",
+      "title": "恵果像",
+      "url": "https://jpsearch.go.jp/item/keioobjecthub-1637",
+      "type": "digital_cultural_heritage",
+      "supports": [
+        "Huiguo 746–805",
+        "Tang China / Chang'an association"
+      ]
+    },
+    {
+      "sourceId": "SRC-ABE-NDL-AUTH-01",
+      "title": "阿部, 正弘, 1819-1857 - Web NDL Authorities",
+      "url": "https://id.ndl.go.jp/auth/ndlna/00269145",
+      "type": "authority_record",
+      "supports": [
+        "identity",
+        "1819–1857",
+        "Fukuyama domain lord"
+      ]
+    },
+    {
+      "sourceId": "SRC-PERRY-NDL-01",
+      "title": "開国―近代の幕開け",
+      "url": "https://www.ndl.go.jp/modern/cha1/description01.html",
+      "type": "official_primary-source_guide",
+      "supports": [
+        "Abe Masahiro role",
+        "Hayashi Fukusai role",
+        "1853–1855 negotiation sequence"
+      ]
+    },
+    {
+      "sourceId": "SRC-HAYASHI-NDL-01",
+      "title": "現代語訳墨夷応接録・英国策論",
+      "url": "https://ndlsearch.ndl.go.jp/books/R100000002-I033161165",
+      "type": "bibliographic_record",
+      "supports": [
+        "林復斎 1800–1859",
+        "authored text 墨夷応接録"
+      ]
+    },
+    {
+      "sourceId": "SRC-HAYASHI-WASEDA-01",
+      "title": "秋園一聯 / 林韑 [書]",
+      "url": "https://www.wul.waseda.ac.jp/kotenseki/html/bunko10/bunko10_08813/index.html",
+      "type": "library_catalogue",
+      "supports": [
+        "林復斎 = 林韑",
+        "1800–1859"
+      ]
+    }
+  ]
+}

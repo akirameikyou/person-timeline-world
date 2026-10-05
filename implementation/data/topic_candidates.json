@@ -1,0 +1,257 @@
+[
+  {
+    "candidateId": "PCH-001",
+    "topicPersonKey": "candidate:PCH-001",
+    "name": {
+      "en": "Huiguo / Keika",
+      "ja": "恵果"
+    },
+    "dates": {
+      "start": 746,
+      "end": 805,
+      "precision": "year"
+    },
+    "region": "Tang China / Chang'an",
+    "domains": [
+      "religion",
+      "knowledge_transmission",
+      "mediation_translation",
+      "interface_between_societies"
+    ],
+    "verification": "PERSON_SIDE_VERIFIED",
+    "topicReason": "Makes the Tang-to-Japan transfer of esoteric Buddhist knowledge observable as an external teacher/intermediary rather than only through Kūkai's Japanese-side record.",
+    "sourceRefs": [
+      "SRC-HUIGUO-JSTAGE-01",
+      "SRC-HUIGUO-JAPANSEARCH-01"
+    ],
+    "sourceLineages": [
+      {
+        "sourceId": "SRC-HUIGUO-JSTAGE-01",
+        "lineageId": "LINE-HUIGUO-KUKAI-TEXT",
+        "dependencyType": "shared_tradition",
+        "sourcePosition": "interested",
+        "note": "Academic study discusses Kūkai's record of receiving both traditions from Huiguo; this is not independent corroboration of every biographical detail."
+      },
+      {
+        "sourceId": "SRC-HUIGUO-JAPANSEARCH-01",
+        "lineageId": "LINE-HUIGUO-LATER-IMAGE",
+        "dependencyType": "derivative",
+        "sourcePosition": "descriptive",
+        "note": "Keio Object Hub / Japan Search records a later portrait and biographical metadata."
+      }
+    ],
+    "status": "topic_candidate",
+    "dateBasis": "life"
+  },
+  {
+    "candidateId": "PCH-002",
+    "topicPersonKey": "candidate:PCH-002",
+    "name": {
+      "en": "Abe Masahiro",
+      "ja": "阿部正弘"
+    },
+    "dates": {
+      "start": 1819,
+      "end": 1857,
+      "precision": "year"
+    },
+    "region": "Japan / Fukuyama domain",
+    "domains": [
+      "governance",
+      "diplomacy",
+      "mediation_translation",
+      "interface_between_societies"
+    ],
+    "verification": "PERSON_SIDE_VERIFIED",
+    "topicReason": "Makes the domestic governance and information-processing side of the 1853–1854 diplomatic sequence observable: receipt of foreign documents, translation, and circulation of opinions.",
+    "sourceRefs": [
+      "SRC-ABE-NDL-AUTH-01",
+      "SRC-PERRY-NDL-01"
+    ],
+    "sourceLineages": [
+      {
+        "sourceId": "SRC-ABE-NDL-AUTH-01",
+        "lineageId": "LINE-ABE-NDL-AUTHORITY",
+        "dependencyType": "derivative",
+        "sourcePosition": "descriptive",
+        "note": "NDL authority establishes identity, life dates, and role as Fukuyama domain lord."
+      },
+      {
+        "sourceId": "SRC-PERRY-NDL-01",
+        "lineageId": "LINE-PERRY-NDL-HISTORY",
+        "dependencyType": "derivative",
+        "sourcePosition": "descriptive",
+        "note": "NDL modern-Japan history identifies Abe as receiving US documents, arranging Japanese translations, and soliciting opinions."
+      }
+    ],
+    "status": "topic_candidate",
+    "dateBasis": "life"
+  },
+  {
+    "candidateId": "PCH-003",
+    "topicPersonKey": "candidate:PCH-003",
+    "name": {
+      "en": "Hayashi Fukusai",
+      "ja": "林復斎 / 林韑"
+    },
+    "dates": {
+      "start": 1800,
+      "end": 1859,
+      "precision": "year"
+    },
+    "region": "Japan / Edo",
+    "domains": [
+      "governance",
+      "diplomacy",
+      "interface_between_societies"
+    ],
+    "verification": "PERSON_SIDE_VERIFIED",
+    "topicReason": "Makes the institutional negotiation side of the Japan–US treaty sequence observable through a named Japanese representative whose authored record is itself a source object.",
+    "sourceRefs": [
+      "SRC-HAYASHI-NDL-01",
+      "SRC-PERRY-NDL-01",
+      "SRC-HAYASHI-WASEDA-01"
+    ],
+    "sourceLineages": [
+      {
+        "sourceId": "SRC-HAYASHI-NDL-01",
+        "lineageId": "LINE-HAYASHI-NDL",
+        "dependencyType": "derivative",
+        "sourcePosition": "descriptive",
+        "note": "NDL bibliographic record identifies 林復斎, 1800–1859, as author of 墨夷応接録."
+      },
+      {
+        "sourceId": "SRC-PERRY-NDL-01",
+        "lineageId": "LINE-PERRY-NDL-HISTORY",
+        "dependencyType": "derivative",
+        "sourcePosition": "descriptive",
+        "note": "NDL modern-Japan history identifies Hayashi Fukusai among bakufu representatives negotiating with Perry."
+      },
+      {
+        "sourceId": "SRC-HAYASHI-WASEDA-01",
+        "lineageId": "LINE-HAYASHI-WASEDA-OBJECT",
+        "dependencyType": "derivative",
+        "sourcePosition": "descriptive",
+        "note": "Waseda Library record independently identifies 林復斎 as 林韑, 1800–1859."
+      }
+    ],
+    "status": "topic_candidate",
+    "dateBasis": "life"
+  },
+  {
+    "candidateId": "WTP-002",
+    "topicPersonKey": "candidate:WTP-002",
+    "name": {
+      "en": "Ma Huan",
+      "ja": "馬歓"
+    },
+    "dates": {
+      "start": 1380,
+      "end": null,
+      "precision": "approximate"
+    },
+    "region": "East Asia / Indian Ocean",
+    "domains": [
+      "navigation",
+      "knowledge_transmission",
+      "trade_logistics"
+    ],
+    "verification": "topic_candidate",
+    "topicReason": "The Ming maritime event needs an observer/recording perspective in addition to the expedition leader.",
+    "sourceRefs": [],
+    "sourceLineages": [],
+    "status": "topic_candidate",
+    "dateBasis": "life"
+  },
+  {
+    "candidateId": "WTP-003",
+    "topicPersonKey": "candidate:WTP-003",
+    "name": {
+      "en": "Rabban Bar Sauma",
+      "ja": "ラッバーン・バール・サウマ"
+    },
+    "dates": {
+      "start": 1220,
+      "end": 1294,
+      "precision": "circa"
+    },
+    "region": "Central Asia / West Asia / Europe",
+    "domains": [
+      "diplomacy",
+      "religion",
+      "interface_between_societies",
+      "migration_diaspora"
+    ],
+    "verification": "topic_candidate",
+    "topicReason": "The Eurasian network event requires an actor whose movement and diplomatic contacts are not represented by a conqueror-centered core view.",
+    "sourceRefs": [],
+    "sourceLineages": [],
+    "status": "topic_candidate",
+    "dateBasis": "life"
+  },
+  {
+    "candidateId": "WTP-006",
+    "topicPersonKey": "candidate:topic-shohashi",
+    "name": {
+      "en": "Shō Hashi",
+      "ja": "尚巴志"
+    },
+    "dates": {
+      "start": null,
+      "end": null,
+      "precision": "unknown"
+    },
+    "region": "Ryukyu",
+    "domains": [
+      "state_formation",
+      "trade_logistics",
+      "interface_between_societies"
+    ],
+    "verification": "coverage_candidate",
+    "topicReason": "Required to observe Ryukyu state formation from the island polity side; the 1422–1429 span is an activity/process range, not asserted life dates.",
+    "sourceRefs": [
+      "SRC-RYUKYU-OKINAWA-01"
+    ],
+    "sourceLineages": [],
+    "status": "topic_candidate",
+    "dateBasis": "activity",
+    "activityRange": {
+      "start": 1422,
+      "end": 1429,
+      "precision": "range"
+    }
+  },
+  {
+    "candidateId": "WTP-007",
+    "topicPersonKey": "candidate:topic-shakushain",
+    "name": {
+      "en": "Shakushain",
+      "ja": "シャクシャイン"
+    },
+    "dates": {
+      "start": null,
+      "end": null,
+      "precision": "unknown"
+    },
+    "region": "Ezo / Hokkaido",
+    "domains": [
+      "resistance",
+      "sovereignty",
+      "trade_logistics",
+      "interface_between_societies"
+    ],
+    "verification": "coverage_candidate",
+    "topicReason": "Required to observe the Ainu political/trading world in the 1669–1672 conflict; the range is an event/activity placement, not asserted life dates.",
+    "sourceRefs": [
+      "SRC-SHAKUSHAIN-JSTAGE-01"
+    ],
+    "sourceLineages": [],
+    "status": "topic_candidate",
+    "dateBasis": "activity",
+    "activityRange": {
+      "start": 1669,
+      "end": 1672,
+      "precision": "range"
+    }
+  }
+]

@@ -1,0 +1,110 @@
+{
+  "schema": "world-roster-integration-v0.1",
+  "generatedAt": "2026-09-24T09:30:00Z",
+  "basedOnArchitecture": "WORLD PERSON TIMELINE v1.0 — ARCHITECTURE FROZEN",
+  "architectureChanged": false,
+  "scope": "Connects the existing core_roster_1000.json (1000 roster entries), timeline_seed_persons.json (162), events.json (8), topic_candidates.json (7), actors.json (6), and topics.json (8) as one operating system via live browser verification. No architecture change. No mass canonicalization. No large-scale new data added.",
+  "counts": {
+    "rosterEntries": 1000,
+    "timelineSeedPersons": 162,
+    "events": 8,
+    "topicCandidates": 7,
+    "actors": 6,
+    "topics": 8,
+    "topicRequiredSavedThisIntegration": 1
+  },
+  "cases": [
+    {
+      "case": "A",
+      "label": "Genghis Khan -> Rabban Bar Sauma",
+      "eventId": "EVT-001",
+      "topicId": "TOPIC-MONGOL-EURASIA",
+      "corePerson": { "personKey": "roster:p000124", "personId": "p000124", "name": "Genghis Khan", "membership": "core" },
+      "topicRequiredCandidate": { "candidateId": "WTP-003", "topicPersonKey": "candidate:WTP-003", "name": "Rabban Bar Sauma", "verification": "topic_candidate", "savedThisIntegration": false },
+      "linkIntegrity": "resolved (personRefs + candidatePersonRefs both resolve against roster and topic_candidates)"
+    },
+    {
+      "case": "B",
+      "label": "Zheng He -> Ma Huan",
+      "eventId": "EVT-002",
+      "topicId": "TOPIC-MING-MARITIME",
+      "corePerson": { "personKey": "roster:p000072", "personId": "p000072", "name": "Zheng He", "membership": "core" },
+      "topicRequiredCandidate": { "candidateId": "WTP-002", "topicPersonKey": "candidate:WTP-002", "name": "Ma Huan", "verification": "topic_candidate", "savedThisIntegration": false },
+      "linkIntegrity": "resolved"
+    },
+    {
+      "case": "C",
+      "label": "Kukai -> Huiguo",
+      "eventId": "EVT-003",
+      "topicId": "TOPIC-TANG-JAPAN",
+      "corePerson": { "personKey": "roster:p000104", "personId": "p000104", "name": "Kukai", "membership": "core" },
+      "topicRequiredCandidate": { "candidateId": "PCH-001", "topicPersonKey": "candidate:PCH-001", "name": "Huiguo / Keika", "verification": "PERSON_SIDE_VERIFIED", "savedThisIntegration": true },
+      "savedTopicRequiredRecord": {
+        "topicPersonKey": "topic:PCH-001",
+        "personId": "p900001",
+        "membership": "topic_required",
+        "corePipelineStage": "canonical_person_pending",
+        "canonicalValidationStatus": "FAIL",
+        "curatorApproval": "PENDING",
+        "sourceRefs": ["SRC-HUIGUO-JSTAGE-01", "SRC-HUIGUO-JAPANSEARCH-01"],
+        "sourceEventRefs": ["EVT-003"],
+        "topicRefs": ["TOPIC-TANG-JAPAN"],
+        "note": "Saved live via Save+Link in this integration pass. canonicalValidationStatus=FAIL is the honest, expected result: this record does not yet carry PERSON_SCHEMA_V1.0's historicity/classification/geography/anchorTypes/externalIds/sources/admissionStatus/dataQualityStatus/auditStatus fields. No fields were fabricated to force a PASS."
+      },
+      "linkIntegrity": "resolved; personId (p900001) stable across topic_required -> core_candidate -> canonical_person_pending"
+    },
+    {
+      "case": "D",
+      "label": "Hokusai -> Nishimuraya/Eijudo -> anonymous woodcutters/printers",
+      "eventId": "EVT-004",
+      "topicId": "TOPIC-HOKUSAI-PRINT",
+      "corePerson": { "personKey": "roster:p000134", "personId": "p000134", "name": "Katsushika Hokusai", "membership": "core" },
+      "actors": [
+        { "actorId": "ORG-001", "actorType": "organization", "label": "Nishimuraya / Eijudo" },
+        { "actorId": "GAP-001", "actorType": "social_function_gap", "label": "Eijudo woodcutters and printers" }
+      ],
+      "actorSeparationCheck": "PASS — neither Eijudo nor the anonymous woodcutters/printers were converted to person records; no candidatePersonRefs exist on this event",
+      "linkIntegrity": "resolved"
+    },
+    {
+      "case": "E",
+      "label": "Tenmei famine -> rural/fishing communities, food-management authorities, urban distribution actors",
+      "eventId": "EVT-005",
+      "topicId": "TOPIC-TENMEI-FAMINE",
+      "personRefs": [],
+      "candidatePersonRefs": [],
+      "actors": [
+        { "actorId": "GRP-001", "actorType": "group", "label": "農村社会 (rural communities)" },
+        { "actorId": "GRP-002", "actorType": "group", "label": "漁村社会 (fishing communities)" },
+        { "actorId": "GRP-003", "actorType": "institutional_group", "label": "諸藩・幕府の食料管理主体 (domain/shogunate food-management authorities)" },
+        { "actorId": "GRP-004", "actorType": "group", "label": "都市の消費・流通主体 (urban distribution actors)" }
+      ],
+      "systemicEventCheck": "PASS — event is valid with zero person/candidate references; no person was auto-generated from the generic group actors",
+      "knownGap": "1783 Asama eruption is referenced only in placeRefs/note text of EVT-005 in this v0.1 dataset; it is not modeled as its own linked event. Not added this pass (no new-event authoring in scope).",
+      "linkIntegrity": "resolved (actorRefs only)"
+    }
+  ],
+  "eventPersonActorMatrix": [
+    { "eventId": "EVT-001", "topicId": "TOPIC-MONGOL-EURASIA", "personRefs": ["roster:p000124"], "candidatePersonRefs": ["candidate:WTP-003"], "actorRefs": [] },
+    { "eventId": "EVT-002", "topicId": "TOPIC-MING-MARITIME", "personRefs": ["roster:p000072"], "candidatePersonRefs": ["candidate:WTP-002"], "actorRefs": [] },
+    { "eventId": "EVT-003", "topicId": "TOPIC-TANG-JAPAN", "personRefs": ["roster:p000104"], "candidatePersonRefs": ["candidate:PCH-001"], "actorRefs": [] },
+    { "eventId": "EVT-004", "topicId": "TOPIC-HOKUSAI-PRINT", "personRefs": ["roster:p000134"], "candidatePersonRefs": [], "actorRefs": ["ORG-001", "GAP-001"] },
+    { "eventId": "EVT-005", "topicId": "TOPIC-TENMEI-FAMINE", "personRefs": [], "candidatePersonRefs": [], "actorRefs": ["GRP-001", "GRP-002", "GRP-003", "GRP-004"] },
+    { "eventId": "EVT-006", "topicId": "TOPIC-PERRY-JAPAN-US", "personRefs": ["seed:matthew-c-perry"], "candidatePersonRefs": ["candidate:PCH-002", "candidate:PCH-003"], "actorRefs": [] },
+    { "eventId": "EVT-007", "topicId": "TOPIC-RYUKYU", "personRefs": [], "candidatePersonRefs": ["candidate:topic-shohashi"], "actorRefs": [] },
+    { "eventId": "EVT-008", "topicId": "TOPIC-AINU", "personRefs": [], "candidatePersonRefs": ["candidate:topic-shakushain"], "actorRefs": [] }
+  ],
+  "reuseLoop": {
+    "description": "ROSTER -> EVENT -> NEW ACTOR -> TOPIC REQUIRED -> save -> reuse from a second EVENT",
+    "mechanismVerified": true,
+    "mechanismVerificationMethod": "Live browser: saved Huiguo (candidate:PCH-001) from EVT-003 via the real Save+Link UI, then invoked the reuse path a second time under a clearly-labeled, non-historical mechanism-check event (excluded from this file's data). Result: person count stayed at 1, only a second link record was added; the possible-match dialog (same name, different candidateId) correctly required an explicit A/B/C human choice rather than auto-merging.",
+    "realDataGap": "The current 8-event seed dataset (events.json) does not yet contain a second REAL event that independently requires the same Topic Required person. Each of the 7 topic_candidates is currently referenced by exactly one event. This is a data-coverage gap, not a mechanism gap, and is out of scope for v0.1 (no large-scale new event authoring).",
+    "recommendation": "Phase 12 (or later): author one additional, properly sourced real event that legitimately reuses an existing Topic Required person (e.g. a second Huiguo-adjacent Tang-Japan knowledge-transmission event) to close this data-coverage gap with genuine history rather than a synthetic record."
+  },
+  "knownGaps": [
+    "core_roster_1000.json remains 1000 unverified roster_entries; none were converted to PERSON_SCHEMA_V1.0 canonical records, and none should be without real biographical verification.",
+    "No Topic Required record currently satisfies PERSON_SCHEMA_V1.0 (canonicalValidationStatus=PASS); this is expected given the current data and is not a defect.",
+    "4 sources in sources.json (SRC-MET-HOKUSAI-01, SRC-ARCHIVES-ASAMA-01, SRC-TENMEI-JSTAGE-01, SRC-TENMEI-HACHINOHE-01) are not yet referenced by any candidate/event/person; orphaned but not broken.",
+    "addManualTopic (manual Topic Required entry, not event-triggered) still uses a blocking alert on name collision rather than the A/B/C possible-match dialog; unchanged this pass, out of scope."
+  ]
+}

@@ -1,0 +1,60 @@
+[
+  {
+    "actorId": "ORG-001",
+    "actorType": "organization",
+    "label": "Nishimuraya / Eijudō",
+    "aliases": [
+      "Eijudō"
+    ],
+    "role": "publisher / printing firm",
+    "status": "verified_non_person_actor"
+  },
+  {
+    "actorId": "GAP-001",
+    "actorType": "social_function_gap",
+    "label": "Eijudō woodcutters and printers",
+    "aliases": [],
+    "role": "anonymous production contributors",
+    "status": "attested_social_function_gap"
+  },
+  {
+    "actorId": "GRP-001",
+    "actorType": "group",
+    "label": "農村社会",
+    "aliases": [
+      "farm-village communities"
+    ],
+    "role": "food production / social reproduction",
+    "status": "group_level_reference"
+  },
+  {
+    "actorId": "GRP-002",
+    "actorType": "group",
+    "label": "漁村社会",
+    "aliases": [
+      "fishing-village communities"
+    ],
+    "role": "coastal livelihood / food economy",
+    "status": "group_level_reference"
+  },
+  {
+    "actorId": "GRP-003",
+    "actorType": "institutional_group",
+    "label": "諸藩・幕府の食料管理主体",
+    "aliases": [
+      "domain and shogunate food-management authorities"
+    ],
+    "role": "governance / food management",
+    "status": "group_level_reference"
+  },
+  {
+    "actorId": "GRP-004",
+    "actorType": "group",
+    "label": "都市の消費・流通主体",
+    "aliases": [
+      "urban consumption and distribution actors"
+    ],
+    "role": "urban food market interaction",
+    "status": "group_level_reference"
+  }
+]

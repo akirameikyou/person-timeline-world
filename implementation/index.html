@@ -1,0 +1,148 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Person Timeline World v1.0 — Implementation</title>
+  <meta name="description" content="Person Timeline Index — Core roster plus topic-required people and event links." />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+<div class="shell">
+  <header class="topbar">
+    <div>
+      <div class="eyebrow">OS SERIES / PERSON TIMELINE WORLD</div>
+      <h1>Person Timeline Index</h1>
+      <div class="subtitle">TIME FIRST — 基本名簿を軸に、事象から必要人物を追加保存する</div>
+      <div class="status-note">IMPLEMENTATION v1.0 · historical data is still pilot / provisional</div>
+    </div>
+    <div class="toolbar">
+      <button id="exportBtn" class="ghost">Export Topic Layer</button>
+      <button id="importBtn" class="ghost">Import Topic Layer</button>
+      <input id="importFile" type="file" accept="application/json" hidden />
+      <button id="resetBtn" class="ghost danger">Reset Local</button>
+    </div>
+  </header>
+
+  <nav class="main-tabs" aria-label="Main views">
+    <button class="main-tab active" data-view="timeline">TIMELINE</button>
+    <button class="main-tab" data-view="events">EVENTS</button>
+    <button class="main-tab" data-view="roster">ROSTER</button>
+    <button class="main-tab" data-view="topic">TOPIC REQUIRED</button>
+  </nav>
+
+  <main class="layout">
+    <aside class="filters panel" aria-label="検索と絞り込み">
+      <section>
+        <label class="label" for="searchInput">SEARCH</label>
+        <input id="searchInput" class="search" type="search" placeholder="人物名・役割・国・地域・事象" autocomplete="off" />
+      </section>
+
+      <section class="focus-block">
+        <div class="section-head">
+          <span class="label">YEAR FOCUS</span>
+          <output id="yearOutput" class="year-output">1831</output>
+        </div>
+        <input id="yearSlider" type="range" min="1400" max="1980" step="1" value="1831" />
+        <div class="range-labels"><span id="yearMin">1400</span><span id="yearMax">1980</span></div>
+        <p class="gesture-note">人物バー / ▼＝YEAR FOCUS　空白面・目盛り＝VIEW RANGE</p>
+        <label class="toggle-row"><input id="aliveOnly" type="checkbox" /><span>この年に生存していた人物だけ</span></label>
+      </section>
+
+      <section>
+        <div class="section-head"><span class="label">MEMBERSHIP</span><button id="clearMembership" class="text-button">clear</button></div>
+        <div id="membershipFilters" class="chips"></div>
+      </section>
+
+      <section>
+        <div class="section-head"><span class="label">DOMAIN</span><button id="clearDomains" class="text-button">clear</button></div>
+        <div id="domainFilters" class="chips"></div>
+      </section>
+
+      <section>
+        <div class="section-head"><span class="label">REGION</span><button id="clearRegions" class="text-button">clear</button></div>
+        <div id="regionFilters" class="chips"></div>
+      </section>
+
+      <section class="stats-card">
+        <div class="stats-title">DATA STATUS</div>
+        <div id="stats" class="stats"></div>
+      </section>
+    </aside>
+
+    <section class="timeline panel" id="timelinePanel">
+      <div class="timeline-toolbar">
+        <div><div class="label">WORLD PERSON TIMELINE</div><div id="resultSummary" class="result-summary"></div></div>
+        <div class="timeline-readout"><span class="readout-label">YEAR</span><span id="timelineYearReadout">1831</span></div>
+        <div class="sort-control"><span>SORT</span><select id="sortSelect"><option value="birth">BIRTH</option><option value="name">NAME A–Z</option><option value="death">DEATH</option></select></div>
+        <button id="fitTimeline" class="fit-button">FIT VIEW</button>
+      </div>
+      <div class="drag-hint"><span>DRAG</span><span>人物バー / ▼ = YEAR FOCUS</span><span>空白面 / 目盛り = VIEW RANGE</span></div>
+      <div id="timelineScale" class="timeline-scale"></div>
+      <div id="rowsViewport" class="rows-viewport"><div id="rows" class="rows"></div><div id="emptyState" class="empty" hidden>条件に一致する人物がありません。</div></div>
+    </section>
+
+    <aside class="detail panel" id="detailPanel">
+      <div id="detailEmpty" class="detail-empty">人物を選択すると、人物情報・Event link・Topic statusを表示します。</div>
+      <article id="detailCard" hidden>
+        <div class="label" id="detailMembershipLabel"></div>
+        <h2 id="detailName"></h2>
+        <div id="detailReading" class="detail-reading"></div>
+        <p id="detailIdentity" class="detail-life"></p>
+        <div id="detailAge" class="age-badge"></div>
+        <dl class="facts">
+          <div><dt>PRIMARY LABEL</dt><dd id="detailPrimary"></dd></div>
+          <div><dt>DOMAINS</dt><dd id="detailDomains"></dd></div>
+          <div><dt>REGION</dt><dd id="detailRegions"></dd></div>
+          <div><dt>COUNTRY / AREA</dt><dd id="detailCountries"></dd></div>
+          <div><dt>HISTORICAL POLITY</dt><dd id="detailPolities"></dd></div>
+          <div><dt>ROLES</dt><dd id="detailRoles"></dd></div>
+          <div><dt>OBSERVATION NOTE</dt><dd id="detailObservation"></dd></div>
+        </dl>
+        <div class="linked-block"><div class="section-head"><span class="label">EVENT LINKS</span></div><div id="detailEvents" class="detail-events"></div></div>
+        <div class="source-box"><div class="label">SOURCE / STATUS</div><div id="detailSources"></div></div>
+        <details class="raw-data"><summary>Raw record</summary><pre id="detailRaw"></pre></details>
+      </article>
+    </aside>
+  </main>
+
+  <section id="eventsView" class="full-view panel" hidden>
+    <div class="view-header"><div><div class="label">EVENTS / TOPIC SURFACE</div><div class="view-caption">事象を起点に、既存人物・Topic Required候補・組織・集団を辿ります。</div></div></div>
+    <div id="eventsList"></div>
+  </section>
+
+  <section id="rosterView" class="full-view panel" hidden>
+    <div class="view-header"><div><div class="label">BASE ROSTER</div><div class="view-caption">1,000人の基本名簿。現段階では機械移入された暫定名簿で、全員が年代配置済みではありません。</div></div><div id="rosterCount" class="count-badge"></div></div>
+    <div id="rosterList" class="roster-list"></div>
+  </section>
+
+  <section id="topicView" class="full-view panel" hidden>
+    <div class="view-header"><div><div class="label">TOPIC REQUIRED PERSONS</div><div class="view-caption">基本名簿の外でも、事象を観察するために必要になった人物を保存します。</div></div><button id="addTopicBtn" class="primary small">+ ADD TOPIC PERSON</button></div>
+    <div id="topicList"></div>
+  </section>
+
+  <footer><span>Person Timeline World v1.0</span><span>CORE roster / EVENT surface / TOPIC REQUIRED extension · IndexedDB local persistence</span></footer>
+</div>
+
+<template id="topicPersonTemplate">
+  <div class="modalBackdrop">
+    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+      <div class="modalHead"><span id="modalTitle">SAVE TOPIC REQUIRED PERSON</span><button class="close" type="button" aria-label="close">×</button></div>
+      <div class="modalBody">
+        <div id="modalSource" class="muted"></div>
+        <label>表示名（日本語 / 現地名）<input id="tpJa" /></label>
+        <label>English / Romanized name<input id="tpEn" /></label>
+        <div class="two-cols"><label>Timeline start year<input id="tpStart" type="number" /></label><label>Timeline end year<input id="tpEnd" type="number" /></label></div><label>Date basis<select id="tpBasis"><option value="life">LIFE</option><option value="activity">ACTIVITY / PROCESS</option><option value="floruit">FLORUIT</option></select></label>
+        <label>Region / Area<input id="tpRegion" /></label>
+        <label>Topic ID<input id="tpTopic" /></label>
+        <label>Reason<textarea id="tpReason"></textarea></label>
+        <label>Source refs (one per line)<textarea id="tpSources"></textarea></label>
+        <label>Verification<select id="tpStatus"><option value="topic_candidate">TOPIC CANDIDATE</option><option value="staged_verified">STAGED VERIFIED</option></select></label>
+        <button id="saveTopicPerson" class="primary" type="button">SAVE + LINK</button>
+      </div>
+    </div>
+  </div>
+</template>
+<script src="app.js"></script>
+</body>
+</html>

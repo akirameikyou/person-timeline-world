@@ -1,0 +1,62 @@
+[
+  {
+    "sourceId": "SRC-HUIGUO-JSTAGE-01",
+    "label": "J-STAGE: 空海のみた恵果の密教",
+    "url": "https://www.jstage.jst.go.jp/article/chisangakuho/65/0/65_209/_article/-char/ja"
+  },
+  {
+    "sourceId": "SRC-HUIGUO-JAPANSEARCH-01",
+    "label": "Japan Search / Keio Object Hub: 恵果像",
+    "url": "https://jpsearch.go.jp/item/keioobjecthub-1637"
+  },
+  {
+    "sourceId": "SRC-ABE-NDL-AUTH-01",
+    "label": "NDL Authorities: 阿部正弘",
+    "url": "https://id.ndl.go.jp/auth/ndlna/00269145"
+  },
+  {
+    "sourceId": "SRC-PERRY-NDL-01",
+    "label": "NDL: 開国―近代の幕開け",
+    "url": "https://www.ndl.go.jp/modern/cha1/description01.html"
+  },
+  {
+    "sourceId": "SRC-HAYASHI-NDL-01",
+    "label": "NDL Search: 現代語訳墨夷応接録・英国策論",
+    "url": "https://ndlsearch.ndl.go.jp/books/R100000002-I033161165"
+  },
+  {
+    "sourceId": "SRC-HAYASHI-WASEDA-01",
+    "label": "Waseda Library: 秋園一聯 / 林韑 [書]",
+    "url": "https://www.wul.waseda.ac.jp/kotenseki/html/bunko10/bunko10_08813/index.html"
+  },
+  {
+    "sourceId": "SRC-MET-HOKUSAI-01",
+    "label": "Met: The Great Wave: Anatomy of an Icon",
+    "url": "https://www.metmuseum.org/en/about-the-met/conservation-and-scientific-research/conservation-stories/2020/hokusai-great-wave"
+  },
+  {
+    "sourceId": "SRC-ARCHIVES-ASAMA-01",
+    "label": "国立公文書館: 天下一大変 — 地震と噴火",
+    "url": "https://www.archives.go.jp/exhibition/digital/tenkataihen/earthquake/index.html"
+  },
+  {
+    "sourceId": "SRC-TENMEI-JSTAGE-01",
+    "label": "NDL/J-STAGE indexed research: 社会経済的背景との関連からみた天明の飢饉と疫病",
+    "url": "https://ndlsearch.ndl.go.jp/books/R000000004-I2072471"
+  },
+  {
+    "sourceId": "SRC-TENMEI-HACHINOHE-01",
+    "label": "立命館大学: 『鮫御役所日記』から見た天明飢饉と漁村",
+    "url": "https://www.ritsumei.ac.jp/acd/re/k-rsc/hss/book/pdf/no87_08.pdf"
+  },
+  {
+    "sourceId": "SRC-RYUKYU-OKINAWA-01",
+    "label": "沖縄県立図書館 / 沖縄歴史資料",
+    "url": "https://www.library.pref.okinawa.jp/archive/contents/cat39/map-knowledge.html"
+  },
+  {
+    "sourceId": "SRC-SHAKUSHAIN-JSTAGE-01",
+    "label": "J-STAGE: シャクシャインの戦い研究",
+    "url": "https://www.jstage.jst.go.jp/article/tgkt/1/0/1_KJ00004265913/_article/-char/en"
+  }
+]

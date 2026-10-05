@@ -1,0 +1,200 @@
+{
+  "artifact": "PHASE8_TENMEI_REGIONAL_AUDIT",
+  "version": "0.1",
+  "date": "2026-09-24",
+  "status": "REGIONAL_AUDIT_PASS_WITH_CONTROL_NOTE",
+  "parentEventId": "JPX-001",
+  "decision": "Keep Tenmei as a systemic-process event; decompose into linked regional/process observations rather than inventing a single named protagonist.",
+  "dateClaims": [
+    {
+      "claim": "1781–1788",
+      "basis": "academic research framing",
+      "sourceRefs": [
+        "SRC-TENMEI-JSTAGE-01"
+      ],
+      "status": "retain"
+    },
+    {
+      "claim": "1783 start",
+      "basis": "National Archives timeline entry",
+      "sourceRefs": [
+        "SRC-ARCHIVES-TENMEI-01"
+      ],
+      "status": "retain_as_event-onset marker"
+    },
+    {
+      "claim": "1782–1787",
+      "basis": "Hachinohe fishing-village study",
+      "sourceRefs": [
+        "SRC-TENMEI-HACHINOHE-01"
+      ],
+      "status": "retain_as_regional-study frame"
+    }
+  ],
+  "regionalAndLinkedFrames": [
+    {
+      "frameId": "JPX-001-R01",
+      "frameType": "regional_policy_response",
+      "region": "Tsugaru / Hirosaki domain",
+      "period": "1783",
+      "status": "SOURCE_SUPPORTED",
+      "actors": [
+        "GRP-003",
+        "GRP-001"
+      ],
+      "observationValues": [
+        "governance",
+        "social_reproduction",
+        "ecological_knowledge"
+      ],
+      "summary": "Tokugawa Forest History Research Institute describes emergency opening of previously restricted forests ('御救山') in the Hirosaki domain during the Tenmei famine, with village-specific cutting arrangements.",
+      "sourceRefs": [
+        "SRC-TOKUGAWA-FOREST-01"
+      ],
+      "namedPersonExtraction": "NONE"
+    },
+    {
+      "frameId": "JPX-001-R02",
+      "frameType": "regional_social_differentiation",
+      "region": "Hachinohe domain / coastal villages",
+      "period": "1782–1787",
+      "status": "SOURCE_SUPPORTED",
+      "actors": [
+        "GRP-002",
+        "GRP-001"
+      ],
+      "observationValues": [
+        "social_reproduction",
+        "trade_logistics",
+        "governance"
+      ],
+      "summary": "The Hachinohe fishing-village study uses the Same magistrate-office diary to examine coastal village effects, including fishing-vessel sales, salt pans, port entry, and differences in responses between fishing and farming populations.",
+      "sourceRefs": [
+        "SRC-TENMEI-HACHINOHE-01"
+      ],
+      "namedPersonExtraction": "NONE_AT_SEED_STAGE",
+      "openItems": [
+        "Extract individually named actors only from source passages that assign a specific documented role."
+      ]
+    },
+    {
+      "frameId": "JPX-001-R03",
+      "frameType": "regional_differentiation_audit",
+      "region": "Ōu / northeastern Japan",
+      "period": "1781–1788",
+      "status": "SOURCE_SUPPORTED_AS_ANALYTICAL_FRAME",
+      "actors": [
+        "GRP-001",
+        "GRP-002",
+        "GRP-003"
+      ],
+      "observationValues": [
+        "social_reproduction",
+        "health_body_knowledge",
+        "governance"
+      ],
+      "summary": "The J-STAGE/NDL-indexed study explicitly reports large differences in mortality by sex, age, social class, domain and area characteristics including fishing villages, farm villages and cities.",
+      "sourceRefs": [
+        "SRC-TENMEI-JSTAGE-01"
+      ],
+      "namedPersonExtraction": "NONE_AT_SEED_STAGE",
+      "openItems": [
+        "Regional sub-events require their own local source sets before detailed person extraction."
+      ]
+    },
+    {
+      "frameId": "JPX-001-E01",
+      "frameType": "linked_environmental_event",
+      "region": "Asama / Shinano",
+      "period": "1783",
+      "status": "SOURCE_SUPPORTED_LINKED_FACTOR",
+      "actors": [],
+      "observationValues": [
+        "ecological_knowledge",
+        "social_reproduction"
+      ],
+      "summary": "The National Archives documents the 1783 Asama eruption and notes that volcanic ash contributed to lower temperatures and aggravated the Tenmei famine. Keep the eruption as a linked event rather than reducing the famine to a single-cause explanation.",
+      "sourceRefs": [
+        "SRC-ARCHIVES-ASAMA-01"
+      ],
+      "namedPersonExtraction": "NONE"
+    },
+    {
+      "frameId": "JPX-001-R04",
+      "frameType": "urban_market_case",
+      "region": "Urban food distribution",
+      "period": "open",
+      "status": "OPEN_CASE_REQUIRED",
+      "actors": [
+        "GRP-004"
+      ],
+      "observationValues": [
+        "trade_logistics",
+        "governance",
+        "social_reproduction"
+      ],
+      "summary": "The systemic model should include an urban distribution/price response slot, but Phase 8 does not create a named city case without a local source set.",
+      "sourceRefs": [
+        "SRC-TENMEI-JSTAGE-01"
+      ],
+      "namedPersonExtraction": "NONE",
+      "openItems": [
+        "Select a source-rich city case and conduct a separate source audit."
+      ]
+    }
+  ],
+  "causalControls": [
+    "Do not encode 'Asama eruption = sole cause'.",
+    "Keep climate/crop conditions, policy/food management, market circulation, local governance, epidemics and the eruption as separately sourced factors.",
+    "Do not infer person candidates from generic group references.",
+    "Do not treat a national famine label as evidence of uniform regional experience."
+  ],
+  "architecturalConclusion": "Tenmei should be a parent systemic process with linked environmental events and child regional/process frames. Person extraction is an optional downstream output, not a prerequisite for event validity.",
+  "sources": [
+    {
+      "sourceId": "SRC-ARCHIVES-TENMEI-01",
+      "title": "天下大変－年表：国立公文書館",
+      "url": "https://www.archives.go.jp/exhibition/digital/tenkataihen/history.html",
+      "supports": [
+        "1783 Tenmei famine onset marker"
+      ]
+    },
+    {
+      "sourceId": "SRC-ARCHIVES-ASAMA-01",
+      "title": "天下大変－地震と噴火：国立公文書館",
+      "url": "https://www.archives.go.jp/exhibition/digital/tenkataihen/earthquake/index.html",
+      "supports": [
+        "1783 Asama eruption",
+        "ash and temperature effects aggravated famine"
+      ]
+    },
+    {
+      "sourceId": "SRC-TENMEI-JSTAGE-01",
+      "title": "社会経済的背景との関連からみた天明の飢饉と疫病",
+      "url": "https://ndlsearch.ndl.go.jp/books/R000000004-I2072471",
+      "supports": [
+        "1781–1788 framing",
+        "regional/social variation",
+        "famine/epidemic relationships"
+      ]
+    },
+    {
+      "sourceId": "SRC-TENMEI-HACHINOHE-01",
+      "title": "『鮫御役所日記』から見た天明飢饉と漁村－八戸藩の場合－",
+      "url": "https://www.ritsumei.ac.jp/acd/re/k-rsc/hss/book/pdf/no87_08.pdf",
+      "supports": [
+        "1782–1787 Hachinohe fishing-village case",
+        "coastal effects and responses"
+      ]
+    },
+    {
+      "sourceId": "SRC-TOKUGAWA-FOREST-01",
+      "title": "林政史 ー コラム集",
+      "url": "https://rinseishi.tokugawa.or.jp/kenkyukatsudo/rinseishi_column/",
+      "supports": [
+        "Hirosaki '御救山' response during Tenmei famine",
+        "village-specific forest-use arrangements"
+      ]
+    }
+  ]
+}

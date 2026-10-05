@@ -1,0 +1,102 @@
+{
+  "schemaVersion": "world-implementation-v1.0",
+  "status": "implementation_pilot_not_canonical",
+  "uiLocale": "ja",
+  "datasetNotes": [
+    "core_roster_1000 is a mechanically imported provisional roster from v0.2; metadata is unverified.",
+    "timeline_seed_160ish is inherited prototype/UI stress-test data and must not be treated as publication-grade historical data.",
+    "topic-required data is local and separate from the frozen person schema.",
+    "event schema remains a pilot container; no global freeze is claimed."
+  ],
+  "personRegistry": {
+    "description": "Two distinct record tracks. They must not be conflated in code, docs, or reporting.",
+    "rosterEntries": {
+      "source": "data/core_roster_1000.json",
+      "conformsTo": null,
+      "status": "provisional_selection_v0.2, metadata_unverified",
+      "note": "NOT PERSON_SCHEMA_V1.0 canonical person records. Minimal hint-suffixed fields only (regionHint, domainHint, etc.). No birth/death/classification/geography has been inferred or backfilled to make these look schema-conformant, and none should be."
+    },
+    "canonicalPersonRecords": {
+      "source": null,
+      "conformsTo": "reference/person-schema/PERSON_SCHEMA_V1.0.json",
+      "status": "not yet populated",
+      "note": "No record in this implementation currently satisfies PERSON_SCHEMA_V1.0 in full. This is intentionally left unpopulated rather than filled with guessed data. Topic Required records are a separate, non-conformant local layer."
+    }
+  },
+  "corePromotionPipeline": {
+    "description": "membership stays 'topic_required' through core_candidate, canonical_person_pending and canonical_person; it only becomes 'core' at core_member. personId, once assigned at core_candidate, never changes across later stages. No stage fabricates missing PERSON_SCHEMA_V1.0 fields. canonicalValidationStatus (schema conformance, machine-checked) and curatorApproval (human sign-off) are tracked as two separate fields; a record only reaches canonical_person when canonicalValidationStatus=PASS AND curatorApproval=APPROVED.",
+    "validator": "PERSON_SCHEMA_V1.0 runtime validator: data/PERSON_SCHEMA_V1.0.json is fetched at runtime and checked against (type/required/properties/additionalProperties/enum/pattern/$ref/oneOf/anyOf/allOf/not). Validation runs against a whitelist projection that keeps only PERSON_SCHEMA_V1.0-named top-level fields (personId, name, dates, historicity, classification, geography, anchorTypes, externalIds, sources, admissionStatus, dataQualityStatus, auditStatus, etc.) and drops implementation-only tracking fields (topicPersonKey, membership, corePipelineStage, sourceRefs, topicReason, createdAt, etc.) before checking. No field value is ever invented, restructured, or backfilled to make a check pass; missing/mismatched schema fields are reported as-is. This is a purpose-built checker for PERSON_SCHEMA_V1.0, not a general-purpose JSON Schema Draft 2020-12 implementation.",
+    "schemaDriftGuard": "data/PERSON_SCHEMA_V1.0.json (served copy) must stay byte-identical to reference/person-schema/PERSON_SCHEMA_V1.0.json (frozen source of truth). Compared by SHA-256 in VERIFY_DATA.py; see its output for PASS/FAIL and both hashes.",
+    "stages": [
+      {"stage": "topic_required", "membership": "topic_required", "note": "default state; no corePipelineStage set"},
+      {"stage": "core_candidate", "membership": "topic_required", "note": "personId assigned if missing; canonicalValidationStatus=null, curatorApproval=PENDING; not canonical, not core"},
+      {"stage": "canonical_person_pending", "membership": "topic_required", "note": "RUN SCHEMA VALIDATION has been executed at least once; canonicalValidationStatus is PASS or FAIL. Still not canonical, not core, even if PASS, until curator explicitly approves"},
+      {"stage": "canonical_person", "membership": "topic_required", "note": "reachable only when canonicalValidationStatus=PASS and curatorApproval=APPROVED; still not core"},
+      {"stage": "core_member", "membership": "core", "note": "only reachable from canonical_person; membership flips to core here and only here"}
+    ]
+  },
+  "membershipTypes": [
+    "core",
+    "timeline_seed",
+    "core_demo",
+    "topic_required"
+  ],
+  "actorTypes": [
+    "person",
+    "organization",
+    "group",
+    "institutional_group",
+    "social_function_gap"
+  ],
+  "topicLifecycle": [
+    "candidate",
+    "possible_match",
+    "saved",
+    "verified_staged",
+    "hold_review",
+    "core_candidate",
+    "canonical_person_pending",
+    "canonical_person",
+    "core_member"
+  ],
+  "personIdentityRule": "Identity is separate from collection membership; topic-required storage does not imply core membership. Promotion follows topic_required -> core_candidate -> canonical_person_pending -> canonical_person -> core_member; personId (once assigned at core_candidate), eventId, topicId, and sourceRefs must not change across any stage. membership only becomes 'core' at core_member, reachable only after canonicalValidationStatus=PASS and curatorApproval=APPROVED.",
+  "domains": {
+    "art": "芸術 / Art",
+    "commerce": "商業 / Commerce",
+    "diplomacy": "外交 / Diplomacy",
+    "education": "教育 / Education",
+    "exploration": "探検 / Exploration",
+    "governance": "統治 / Governance",
+    "interface_between_societies": "社会間の接点 / Interface Between Societies",
+    "knowledge_transmission": "知識伝達 / Knowledge Transmission",
+    "literature": "文学 / Literature",
+    "mediation_translation": "仲介・翻訳 / Mediation & Translation",
+    "migration_diaspora": "移住・離散 / Migration & Diaspora",
+    "military": "軍事 / Military",
+    "military_transformation": "軍事変革 / Military Transformation",
+    "music": "音楽 / Music",
+    "navigation": "航海 / Navigation",
+    "network": "ネットワーク / Network",
+    "philosophy": "哲学 / Philosophy",
+    "politics": "政治 / Politics",
+    "religion": "宗教 / Religion",
+    "resistance": "抵抗 / Resistance",
+    "science": "科学 / Science",
+    "science_technology": "科学技術 / Science & Technology",
+    "sovereignty": "主権 / Sovereignty",
+    "state_formation": "国家形成 / State Formation",
+    "technology": "技術 / Technology",
+    "trade_logistics": "交易・物流 / Trade & Logistics"
+  },
+  "regions": {
+    "africa": "アフリカ / Africa",
+    "eastAsia": "東アジア / East Asia",
+    "europe": "ヨーロッパ / Europe",
+    "japan": "日本 / Japan",
+    "middleEast": "中東 / Middle East",
+    "northAmerica": "北米 / North America",
+    "oceania": "オセアニア / Oceania",
+    "southAmerica": "南米 / South America",
+    "southAsia": "南アジア / South Asia"
+  }
+}

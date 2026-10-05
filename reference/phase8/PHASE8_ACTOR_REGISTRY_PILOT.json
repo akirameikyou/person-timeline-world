@@ -1,0 +1,137 @@
+{
+  "artifact": "PHASE8_ACTOR_REGISTRY_PILOT",
+  "version": "0.1",
+  "date": "2026-09-24",
+  "status": "PILOT_ONLY_NOT_FROZEN",
+  "purpose": "Test a lightweight actor registry outside PERSON_SCHEMA_V1.0 so events can point to persons, organizations, communities, institutional groups, and social-function gaps without type collapse.",
+  "designRule": "Event actors are heterogeneous; a Person reference is one actor subtype, not the universal actor container.",
+  "records": [
+    {
+      "actorId": "ORG-001",
+      "actorType": "organization",
+      "label": "Nishimuraya / Eijudō",
+      "aliases": [
+        "Eijudō"
+      ],
+      "role": "publisher / printing firm",
+      "personRefs": [],
+      "status": "VERIFIED_NON_PERSON_ACTOR",
+      "sourceRefs": [
+        "SRC-MET-HOKUSAI-GWAVE-01"
+      ],
+      "note": "Keep outside Person Timeline. The object/process event needs the organization as an actor."
+    },
+    {
+      "actorId": "GAP-001",
+      "actorType": "social_function_gap",
+      "label": "Eijudō woodcutters and printers",
+      "aliases": [],
+      "role": "anonymous production contributors",
+      "personRefs": [],
+      "status": "ATTESTED_SOCIAL_FUNCTION_GAP",
+      "sourceRefs": [
+        "SRC-MET-HOKUSAI-GWAVE-01"
+      ],
+      "note": "Do not infer individual names from the generic function."
+    },
+    {
+      "actorId": "GRP-001",
+      "actorType": "group",
+      "label": "農村社会",
+      "aliases": [
+        "farm-village communities"
+      ],
+      "role": "food production / social reproduction",
+      "personRefs": [],
+      "status": "GROUP_LEVEL_REFERENCE",
+      "sourceRefs": [
+        "SRC-TENMEI-JSTAGE-01"
+      ],
+      "note": "Seed-level analytical group; not an exhaustive population."
+    },
+    {
+      "actorId": "GRP-002",
+      "actorType": "group",
+      "label": "漁村社会",
+      "aliases": [
+        "fishing-village communities"
+      ],
+      "role": "coastal livelihood / food economy",
+      "personRefs": [],
+      "status": "GROUP_LEVEL_REFERENCE",
+      "sourceRefs": [
+        "SRC-TENMEI-JSTAGE-01",
+        "SRC-TENMEI-HACHINOHE-01"
+      ],
+      "note": "Regional differentiation must remain visible; no individual person inferred."
+    },
+    {
+      "actorId": "GRP-003",
+      "actorType": "institutional_group",
+      "label": "諸藩・幕府の食料管理主体",
+      "aliases": [
+        "domain and shogunate food-management authorities"
+      ],
+      "role": "governance / food management",
+      "personRefs": [],
+      "status": "GROUP_LEVEL_REFERENCE",
+      "sourceRefs": [
+        "SRC-TENMEI-JSTAGE-01"
+      ],
+      "note": "Keep institutional actors separate from individual officials until named roles are sourced."
+    },
+    {
+      "actorId": "GRP-004",
+      "actorType": "group",
+      "label": "都市の消費・流通主体",
+      "aliases": [
+        "urban consumption and distribution actors"
+      ],
+      "role": "urban food market interaction",
+      "personRefs": [],
+      "status": "GROUP_LEVEL_REFERENCE",
+      "sourceRefs": [
+        "SRC-TENMEI-JSTAGE-01"
+      ],
+      "note": "Analytical seed only; requires a local urban case before detailed event encoding."
+    }
+  ],
+  "schemaControls": [
+    "This registry is not a replacement for PERSON_SCHEMA_V1.0.",
+    "No actor record receives a personId unless it is individually verified in the Person workflow.",
+    "No organization/group is ranked or admitted to the Person collection.",
+    "Final actor schema remains open."
+  ],
+  "sources": [
+    {
+      "sourceId": "SRC-MET-HOKUSAI-GWAVE-01",
+      "title": "The Great Wave: Anatomy of an Icon",
+      "url": "https://www.metmuseum.org/en/about-the-met/conservation-and-scientific-research/conservation-stories/2020/hokusai-great-wave",
+      "supports": [
+        "Eijudō printers",
+        "anonymous woodcutters/printers",
+        "Hokusai series production"
+      ]
+    },
+    {
+      "sourceId": "SRC-TENMEI-JSTAGE-01",
+      "title": "社会経済的背景との関連からみた天明の飢饉と疫病",
+      "url": "https://ndlsearch.ndl.go.jp/books/R000000004-I2072471",
+      "supports": [
+        "1781–1788 period",
+        "variation by fishing village, farm village, city, social class, feudal clan",
+        "policy/commerce/agriculture relationships"
+      ]
+    },
+    {
+      "sourceId": "SRC-TENMEI-HACHINOHE-01",
+      "title": "『鮫御役所日記』から見た天明飢饉と漁村－八戸藩の場合－",
+      "url": "https://www.ritsumei.ac.jp/acd/re/k-rsc/hss/book/pdf/no87_08.pdf",
+      "supports": [
+        "Hachinohe domain fishing-village case",
+        "1782–1787 famine sequence",
+        "fishing-village effects and responses"
+      ]
+    }
+  ]
+}

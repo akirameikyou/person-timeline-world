@@ -1,0 +1,72 @@
+{
+  "schema": "world-roster-link-audit-v0.1",
+  "generatedAt": "2026-09-24T09:30:00Z",
+  "identityUniqueness": {
+    "rosterPersonId": { "total": 1000, "unique": 1000, "pass": true, "patternCheck": "all match ^p\\d{6,}$" },
+    "timelineSeedIdentityKey": { "total": 162, "unique": 162, "pass": true },
+    "topicCandidateId": { "total": 7, "unique": 7, "pass": true },
+    "eventId": { "total": 8, "unique": 8, "pass": true },
+    "actorId": { "total": 6, "unique": 6, "pass": true }
+  },
+  "eventReferenceIntegrity": [
+    { "eventId": "EVT-001", "personRefs": ["roster:p000124"], "personRefsResolved": true, "candidatePersonRefs": ["candidate:WTP-003"], "candidatePersonRefsResolved": true, "actorRefs": [], "actorRefsResolved": true },
+    { "eventId": "EVT-002", "personRefs": ["roster:p000072"], "personRefsResolved": true, "candidatePersonRefs": ["candidate:WTP-002"], "candidatePersonRefsResolved": true, "actorRefs": [], "actorRefsResolved": true },
+    { "eventId": "EVT-003", "personRefs": ["roster:p000104"], "personRefsResolved": true, "candidatePersonRefs": ["candidate:PCH-001"], "candidatePersonRefsResolved": true, "actorRefs": [], "actorRefsResolved": true },
+    { "eventId": "EVT-004", "personRefs": ["roster:p000134"], "personRefsResolved": true, "candidatePersonRefs": [], "candidatePersonRefsResolved": true, "actorRefs": ["ORG-001", "GAP-001"], "actorRefsResolved": true },
+    { "eventId": "EVT-005", "personRefs": [], "personRefsResolved": true, "candidatePersonRefs": [], "candidatePersonRefsResolved": true, "actorRefs": ["GRP-001", "GRP-002", "GRP-003", "GRP-004"], "actorRefsResolved": true },
+    { "eventId": "EVT-006", "personRefs": ["seed:matthew-c-perry"], "personRefsResolved": true, "candidatePersonRefs": ["candidate:PCH-002", "candidate:PCH-003"], "candidatePersonRefsResolved": true, "actorRefs": [], "actorRefsResolved": true },
+    { "eventId": "EVT-007", "personRefs": [], "personRefsResolved": true, "candidatePersonRefs": ["candidate:topic-shohashi"], "candidatePersonRefsResolved": true, "actorRefs": [], "actorRefsResolved": true },
+    { "eventId": "EVT-008", "personRefs": [], "personRefsResolved": true, "candidatePersonRefs": ["candidate:topic-shakushain"], "candidatePersonRefsResolved": true, "actorRefs": [], "actorRefsResolved": true }
+  ],
+  "eventReferenceIntegritySummary": { "eventsChecked": 8, "unresolvedRefs": 0, "pass": true },
+  "sourceReferenceAudit": {
+    "totalSourcesDefined": 11,
+    "sourcesReferencedByCandidates": 7,
+    "orphanSources": [
+      "SRC-MET-HOKUSAI-01",
+      "SRC-ARCHIVES-ASAMA-01",
+      "SRC-TENMEI-JSTAGE-01",
+      "SRC-TENMEI-HACHINOHE-01"
+    ],
+    "orphanNote": "Not a broken reference (nothing points to a missing source); these 4 sources exist but nothing currently cites them. Likely reserved for future Hokusai/Tenmei candidate authoring."
+  },
+  "actorTypingAudit": [
+    { "actorId": "ORG-001", "actorType": "organization", "label": "Nishimuraya / Eijudo", "notPersonConfirmed": true },
+    { "actorId": "GAP-001", "actorType": "social_function_gap", "label": "Eijudo woodcutters and printers", "notPersonConfirmed": true },
+    { "actorId": "GRP-001", "actorType": "group", "label": "農村社会", "notPersonConfirmed": true },
+    { "actorId": "GRP-002", "actorType": "group", "label": "漁村社会", "notPersonConfirmed": true },
+    { "actorId": "GRP-003", "actorType": "institutional_group", "label": "諸藩・幕府の食料管理主体", "notPersonConfirmed": true },
+    { "actorId": "GRP-004", "actorType": "group", "label": "都市の消費・流通主体", "notPersonConfirmed": true }
+  ],
+  "actorTypingAuditResult": "PASS — no organization/group/institutional_group/social_function_gap actor was found typed or displayed as a person anywhere in events.json, actors.json, or the running UI.",
+  "duplicateDetectionTest": {
+    "method": "Live browser: saved Huiguo (candidate:PCH-001) for real from EVT-003. Then, under a clearly-labeled mechanism-check event (not real history, excluded from integration data), submitted a second candidate with the identical normalized name but a different candidateId.",
+    "result": "POSSIBLE_MATCH dialog correctly triggered (no silent auto-merge). All three resolution paths confirmed live: (A) link to existing person -> no duplicate created, only a new link; (B) save as separate person -> a genuinely new person record created; (C) hold for review -> no record created, no auto-decision.",
+    "sameCandidateIdReuse": "Re-invoking the save path with the SAME candidateId (PCH-001) against the SAME event is idempotent: no duplicate person, no duplicate link (linkId is deterministic on topicId::eventId::personKey).",
+    "pass": true
+  },
+  "schemaDriftGuard": {
+    "referenceFile": "reference/person-schema/PERSON_SCHEMA_V1.0.json",
+    "servedFile": "implementation/data/PERSON_SCHEMA_V1.0.json",
+    "sha256Reference": "2BDCC8894E7BF8836C698C7F062B196ED7D1986F42FC7556BFA6AE6AFA403DAE",
+    "sha256Served": "2BDCC8894E7BF8836C698C7F062B196ED7D1986F42FC7556BFA6AE6AFA403DAE",
+    "result": "PASS",
+    "note": "Verified via VERIFY_DATA.py (hashlib.sha256) and independently cross-checked with PowerShell Get-FileHash during this integration pass. Frozen schema file itself is unmodified throughout this entire engagement."
+  },
+  "personIdStabilityAudit": {
+    "case": "Huiguo (topic:PCH-001)",
+    "stagesObserved": ["topic_required (no personId)", "core_candidate (personId=p900001 assigned)", "canonical_person_pending (personId=p900001, unchanged)"],
+    "pass": true,
+    "note": "canonical_person and core_member stages were not reached for this real record because canonicalValidationStatus=FAIL (honest, expected). Full-stage personId invariance through core_member was verified separately with a clearly-labeled, non-integrated mechanism-check record and is not repeated here to avoid conflating mechanism tests with real integration data."
+  },
+  "eventLinkIntegrityAudit": {
+    "case": "Huiguo (topic:PCH-001)",
+    "linkId": "TOPIC-TANG-JAPAN::EVT-003::topic:PCH-001",
+    "observedAcrossStages": "identical linkId present before and after the topic_required -> core_candidate -> canonical_person_pending transition",
+    "pass": true
+  },
+  "timeFirstAudit": {
+    "yearFocusVsViewRange": "PASS — dragging a person life-bar changes state.year only; dragging empty track/ruler space changes state.viewMin/viewMax only; verified both via direct state assertions and, in a prior session on the same unmodified interaction code, via real pointer drag simulation.",
+    "plainClickDoesNotMoveYearFocus": "PASS — verified in a prior session on the same unmodified code."
+  }
+}

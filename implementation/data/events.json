@@ -1,0 +1,221 @@
+[
+  {
+    "eventId": "EVT-001",
+    "topicId": "TOPIC-MONGOL-EURASIA",
+    "title": "Mongol-Eurasian Connectivity",
+    "dateStart": 1206,
+    "dateEnd": 1294,
+    "datePrecision": "process",
+    "type": "network_process",
+    "personRefs": [
+      "roster:p000124"
+    ],
+    "candidatePersonRefs": [
+      "candidate:WTP-003"
+    ],
+    "actorRefs": [],
+    "placeRefs": [
+      "Central Asia",
+      "West Asia",
+      "East Asia",
+      "Europe"
+    ],
+    "observationValues": [
+      "state_formation",
+      "trade_logistics",
+      "interface_between_societies",
+      "diplomacy"
+    ],
+    "note": "Prototype event frame."
+  },
+  {
+    "eventId": "EVT-002",
+    "topicId": "TOPIC-MING-MARITIME",
+    "title": "Ming Maritime Voyages",
+    "dateStart": 1405,
+    "dateEnd": 1433,
+    "datePrecision": "sequence",
+    "type": "voyage_network",
+    "personRefs": [
+      "roster:p000072"
+    ],
+    "candidatePersonRefs": [
+      "candidate:WTP-002"
+    ],
+    "actorRefs": [],
+    "placeRefs": [
+      "East Asia",
+      "Southeast Asia",
+      "Indian Ocean"
+    ],
+    "observationValues": [
+      "navigation",
+      "diplomacy",
+      "trade_logistics",
+      "knowledge_transmission"
+    ],
+    "note": "Prototype event frame."
+  },
+  {
+    "eventId": "EVT-003",
+    "topicId": "TOPIC-TANG-JAPAN",
+    "title": "Kūkai's Tang Mission and Knowledge Transmission",
+    "dateStart": 804,
+    "dateEnd": 806,
+    "datePrecision": "year",
+    "type": "voyage_knowledge_transmission",
+    "personRefs": [
+      "roster:p000104"
+    ],
+    "candidatePersonRefs": [
+      "candidate:PCH-001"
+    ],
+    "actorRefs": [],
+    "placeRefs": [
+      "Japan",
+      "Tang China / Chang’an"
+    ],
+    "observationValues": [
+      "religion",
+      "knowledge_transmission",
+      "mediation_translation",
+      "interface_between_societies"
+    ],
+    "note": "Topic-required person can be saved without entering the base roster."
+  },
+  {
+    "eventId": "EVT-004",
+    "topicId": "TOPIC-HOKUSAI-PRINT",
+    "title": "Thirty-six Views of Mount Fuji: Production Process",
+    "dateStart": 1830,
+    "dateEnd": 1832,
+    "datePrecision": "circa",
+    "type": "object_process",
+    "personRefs": [
+      "roster:p000134"
+    ],
+    "candidatePersonRefs": [],
+    "actorRefs": [
+      "ORG-001",
+      "GAP-001"
+    ],
+    "placeRefs": [
+      "Edo Japan"
+    ],
+    "observationValues": [
+      "visual_material_culture",
+      "media_public_sphere",
+      "knowledge_transmission"
+    ],
+    "note": "Non-person actors remain outside the Person layer."
+  },
+  {
+    "eventId": "EVT-005",
+    "topicId": "TOPIC-TENMEI-FAMINE",
+    "title": "Tenmei Famine as Systemic Process",
+    "dateStart": 1781,
+    "dateEnd": 1788,
+    "datePrecision": "range",
+    "type": "systemic_process",
+    "personRefs": [],
+    "candidatePersonRefs": [],
+    "actorRefs": [
+      "GRP-001",
+      "GRP-002",
+      "GRP-003",
+      "GRP-004"
+    ],
+    "placeRefs": [
+      "Northeast Japan",
+      "Hachinohe",
+      "Tsugaru",
+      "Edo Japan"
+    ],
+    "observationValues": [
+      "social_reproduction",
+      "governance",
+      "trade_logistics",
+      "ecological_knowledge",
+      "health_body_knowledge"
+    ],
+    "note": "Systemic stress case: meaningful event without a named protagonist."
+  },
+  {
+    "eventId": "EVT-006",
+    "topicId": "TOPIC-PERRY-JAPAN-US",
+    "title": "Perry and Japan–US Negotiation",
+    "dateStart": 1853,
+    "dateEnd": 1855,
+    "datePrecision": "sequence",
+    "type": "diplomatic_interface_chain",
+    "personRefs": [
+      "seed:matthew-c-perry"
+    ],
+    "candidatePersonRefs": [
+      "candidate:PCH-002",
+      "candidate:PCH-003"
+    ],
+    "actorRefs": [],
+    "placeRefs": [
+      "Edo Bay",
+      "Yokohama",
+      "Japan",
+      "United States"
+    ],
+    "observationValues": [
+      "diplomacy",
+      "governance",
+      "mediation_translation",
+      "interface_between_societies"
+    ],
+    "note": "External and domestic actors coexist; candidate persons can be saved to the topic layer."
+  },
+  {
+    "eventId": "EVT-007",
+    "topicId": "TOPIC-RYUKYU",
+    "title": "Ryukyu Unification Process",
+    "dateStart": 1422,
+    "dateEnd": 1429,
+    "datePrecision": "range",
+    "type": "regional_state_formation_process",
+    "personRefs": [],
+    "candidatePersonRefs": [
+      "candidate:topic-shohashi"
+    ],
+    "actorRefs": [],
+    "placeRefs": [
+      "Ryukyu",
+      "Okinawa"
+    ],
+    "observationValues": [
+      "state_formation",
+      "trade_logistics",
+      "interface_between_societies"
+    ],
+    "note": "Preserve 1422 accession and 1429 unification as a process rather than forcing a single year."
+  },
+  {
+    "eventId": "EVT-008",
+    "topicId": "TOPIC-AINU",
+    "title": "Shakushain Conflict",
+    "dateStart": 1669,
+    "dateEnd": 1672,
+    "datePrecision": "range",
+    "type": "indigenous_resistance_conflict",
+    "personRefs": [],
+    "candidatePersonRefs": [
+      "candidate:topic-shakushain"
+    ],
+    "actorRefs": [],
+    "placeRefs": [
+      "Ezo / Hokkaido"
+    ],
+    "observationValues": [
+      "resistance",
+      "sovereignty",
+      "trade_logistics",
+      "interface_between_societies"
+    ],
+    "note": "Source position remains part of the event record in later canonicalization."
+  }
+]

@@ -1,0 +1,42 @@
+[
+  {
+    "topicId": "TOPIC-MONGOL-EURASIA",
+    "title": "Mongol-Eurasian Connectivity",
+    "note": "Architecture seed: network/process observation."
+  },
+  {
+    "topicId": "TOPIC-MING-MARITIME",
+    "title": "Ming Maritime Voyages",
+    "note": "Architecture seed: voyage/network observation."
+  },
+  {
+    "topicId": "TOPIC-TANG-JAPAN",
+    "title": "Tang–Japan Knowledge Transmission",
+    "note": "Architecture seed: knowledge transmission / external teacher."
+  },
+  {
+    "topicId": "TOPIC-HOKUSAI-PRINT",
+    "title": "Hokusai Print Production",
+    "note": "Architecture seed: object/process with organization and social-function group."
+  },
+  {
+    "topicId": "TOPIC-TENMEI-FAMINE",
+    "title": "Tenmei Famine",
+    "note": "Systemic process; regional differentiation and linked factors."
+  },
+  {
+    "topicId": "TOPIC-PERRY-JAPAN-US",
+    "title": "Perry and Japan–US Negotiation",
+    "note": "Multi-actor diplomatic sequence."
+  },
+  {
+    "topicId": "TOPIC-RYUKYU",
+    "title": "Ryukyu State Formation",
+    "note": "Process with date variance 1422–1429."
+  },
+  {
+    "topicId": "TOPIC-AINU",
+    "title": "Shakushain Conflict",
+    "note": "Indigenous resistance / source-position stress case."
+  }
+]
