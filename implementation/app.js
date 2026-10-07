@@ -79,7 +79,8 @@
   async function runCanonicalSchemaValidation(key){const p=savedTopicPersons().find(x=>personKey(x)===key);if(!p||!['core_candidate','canonical_person_pending'].includes(corePipelineStage(p)))return null;const{valid,errors}=validateAgainstPersonSchema(p);p.canonicalValidationStatus=valid?'PASS':'FAIL';p.canonicalValidationErrors=errors.slice(0,20);p.corePipelineStage='canonical_person_pending';await put(STORE_PEOPLE,p);DATA.topic=await readAll(STORE_PEOPLE);render();if(!valid)alert(`PERSON_SCHEMA_V1.0 validation: FAIL (${errors.length} 件の不整合)\n\n${errors.slice(0,8).join('\n')}${errors.length>8?'\n…':''}\n\nこのレコードを PERSON_SCHEMA_V1.0 に適合させるためのフィールド自動補完は行いません。実データが揃うまで CANONICAL_PERSON_PENDING に留まります。`);else alert('PERSON_SCHEMA_V1.0 validation: PASS。\nスキーマ適合は確認できましたが、これだけでは Canonical Person にはなりません。キュレーターの承認 (APPROVE AS CANONICAL PERSON) が別途必要です。');return p}
   async function approveCanonicalPerson(key){const p=savedTopicPersons().find(x=>personKey(x)===key);if(!p||corePipelineStage(p)!=='canonical_person_pending')return null;if(p.canonicalValidationStatus!=='PASS'){alert('PERSON_SCHEMA_V1.0 validation が PASS していません。curator承認だけでは Canonical Person にできません。先に RUN SCHEMA VALIDATION を実行し、PASS させてください。');return null}if(!confirm('Schema validation は PASS しています。このレコードを Canonical Person としてキュレーター承認しますか？'))return null;p.curatorApproval='APPROVED';p.corePipelineStage='canonical_person';p.canonicalizedAt=new Date().toISOString();await put(STORE_PEOPLE,p);DATA.topic=await readAll(STORE_PEOPLE);render();return p}
   async function confirmCoreMembership(key){const p=savedTopicPersons().find(x=>personKey(x)===key);if(!p||corePipelineStage(p)!=='canonical_person'||p.canonicalValidationStatus!=='PASS'||p.curatorApproval!=='APPROVED')return null;p.membership='core';p.corePipelineStage='core_member';p.promotedFrom='topic_required';p.promotedAt=new Date().toISOString();await put(STORE_PEOPLE,p);DATA.topic=await readAll(STORE_PEOPLE);render();return p}
-  function showPossibleMatchDialog(candidate,existing,eventId,originalModal){
+  // manualRecord: set only from Manual Add (no Event context) — A selects the existing person, B saves manualRecord as-is; neither creates an Event link.
+  function showPossibleMatchDialog(candidate,existing,eventId,originalModal,manualRecord=null){
     const overlay=document.createElement('div');overlay.className='modalBackdrop';
     const compareRow=(label,a,b)=>`<div class="two-cols"><div><dt style="font-size:8px;color:var(--muted)">${esc(label)} · 既存</dt><dd style="margin:2px 0 0;font-size:11px">${esc(a||'—')}</dd></div><div><dt style="font-size:8px;color:var(--muted)">${esc(label)} · 新規候補</dt><dd style="margin:2px 0 0;font-size:11px">${esc(b||'—')}</dd></div></div>`;
     overlay.innerHTML=`<div class="modal">
@@ -90,7 +91,7 @@
         ${compareRow('DATES',`${fmt(personStart(existing))}–${fmt(personEnd(existing))}`,`${fmt(candidate.dates?.start)}–${fmt(candidate.dates?.end)}`)}
         ${compareRow('REGION',existing.region||(existing.regions||[]).join('/'),candidate.region)}
         ${compareRow('SOURCE REFS',(existing.sourceRefs||[]).join(', '),(candidate.sourceRefs||[]).join(', '))}
-        ${compareRow('MEMBERSHIP',membershipLabel(existing),'TOPIC CANDIDATE (new)')}
+        ${compareRow('MEMBERSHIP',membershipLabel(existing),manualRecord?'TOPIC REQUIRED (manual, new)':'TOPIC CANDIDATE (new)')}
         <button id="pmLink" class="primary" type="button">A. 既存人物にリンク</button>
         <button id="pmSeparate" class="ghost" type="button">B. 別人物として保存</button>
         <button id="pmHold" class="ghost" type="button">C. 保留 / 要レビュー</button>
@@ -99,6 +100,13 @@
     document.body.appendChild(overlay);
     const cleanup=()=>{overlay.remove();originalModal?.remove()};
     overlay.querySelector('.close').onclick=cleanup;
+    if(manualRecord){
+      overlay.querySelector('#pmLink').textContent='A. 既存人物を使う（新規作成しない）';
+      overlay.querySelector('#pmLink').onclick=()=>{cleanup();state.selectedKey=personKey(existing);state.view=hasTimelineDates(existing)?'timeline':'topic';render()};
+      overlay.querySelector('#pmSeparate').onclick=async()=>{await put(STORE_PEOPLE,manualRecord);DATA.topic=await readAll(STORE_PEOPLE);cleanup();state.selectedKey=personKey(manualRecord);state.view=hasTimelineDates(manualRecord)?'timeline':'topic';render()};
+      overlay.querySelector('#pmHold').onclick=()=>{cleanup();alert('保留にしました。人物は保存されていません。判断材料が揃ってから再度 SAVE PERSON を実行してください。')};
+      return;
+    }
     overlay.querySelector('#pmLink').onclick=async()=>{await addTopicLink(personKey(existing),eventId,candidate.topicId,'linked_existing_person_confirmed');DATA.topic=await readAll(STORE_PEOPLE);DATA.links=await readAll(STORE_LINKS);cleanup();state.selectedKey=personKey(existing);state.view=hasTimelineDates(existing)?'timeline':'topic';render()};
     overlay.querySelector('#pmSeparate').onclick=async()=>{const p=await ensureTopicPerson(candidate,eventId,{forceNew:true});await addTopicLink(personKey(p),eventId,candidate.topicId,'saved_as_separate_person_confirmed');DATA.topic=await readAll(STORE_PEOPLE);DATA.links=await readAll(STORE_LINKS);cleanup();state.selectedKey=personKey(p);state.view=hasTimelineDates(p)?'timeline':'topic';render()};
     overlay.querySelector('#pmHold').onclick=()=>{cleanup();alert('保留にしました。候補は保存されていません。判断材料が揃ってから再度 Save + Link を実行してください。')};
@@ -145,7 +153,7 @@
       const start=parseInt($('tpStart').value,10),end=parseInt($('tpEnd').value,10);
       const p={topicPersonKey:`topic:manual-${Date.now()}`,candidateId:null,membership:'topic_required',name:{en:en||ja,ja:ja||en},dates:{start:Number.isFinite(start)?start:null,end:Number.isFinite(end)?end:null,precision:'year'},dateBasis:$('tpBasis').value,region:$('tpRegion').value,domains:[],verification:$('tpStatus').value,topicReason:$('tpReason').value,sourceRefs:$('tpSources').value.split(/\n+/).map(s=>s.trim()).filter(Boolean),sourceEventRefs:[],topicRefs:[$('tpTopic').value||'TOPIC-LOCAL'],createdAt:new Date().toISOString()};
       const existing=findExistingByName(p);
-      if(existing){alert('既存人物があります。新規作成せず既存人物を利用してください。');return}
+      if(existing){showPossibleMatchDialog(p,existing,null,m,p);return}
       await put(STORE_PEOPLE,p); DATA.topic=await readAll(STORE_PEOPLE);
       m.remove(); state.view=hasTimelineDates(p)?'timeline':'topic'; state.selectedKey=personKey(p); render();
     };
