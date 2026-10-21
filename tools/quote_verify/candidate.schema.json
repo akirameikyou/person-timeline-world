@@ -1,0 +1,27 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "quote_verify/candidate.schema.json",
+  "title": "Quote Verify candidate source record",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["id", "agent", "person", "url", "verification_claim", "quotes"],
+  "properties": {
+    "schema_version": {"type": "string", "default": "1.0"},
+    "id": {"type": "string", "minLength": 1},
+    "agent": {"type": "string", "minLength": 1},
+    "person": {"type": "string", "minLength": 1},
+    "url": {"type": "string", "format": "uri"},
+    "source_title": {"type": ["string", "null"]},
+    "publisher": {"type": ["string", "null"]},
+    "source_type": {"type": ["string", "null"]},
+    "verification_claim": {"enum": ["checked", "not_checked"]},
+    "quotes": {"type": "array", "items": {"type": "string"}},
+    "claims": {"type": "array", "items": {"type": "string"}},
+    "uncertainty": {"type": ["string", "null"]},
+    "region_id": {"type": "array", "items": {"type": "string"}},
+    "date_kind": {"type": ["string", "null"]},
+    "date_precision": {"enum": ["year", "range", "approximate", "unknown", null]},
+    "submission_id": {"type": ["string", "null"]},
+    "created_at": {"type": ["string", "null"], "format": "date-time"}
+  }
+}
