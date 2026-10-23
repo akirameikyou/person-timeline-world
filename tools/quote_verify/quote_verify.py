@@ -79,7 +79,7 @@ def parse_html(raw: bytes) -> dict:
     text = raw.decode("utf-8", errors="replace")
     parser = VisibleText()
     parser.feed(text)
-    body = re.sub(r"\s+", " ", html.unescape(" ".join(parser.parts))).strip()
+    body = re.sub(r"\s+", " ", html.unescape("".join(parser.parts))).strip()
     canonical = parser.canonical_urls[0] if parser.canonical_urls else None
     page_url = canonical or parser.meta.get("og:url") or parser.meta.get("twitter:url")
     scripts = "\n".join(parser.scripts)

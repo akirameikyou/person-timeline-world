@@ -84,6 +84,8 @@ Where several fragments exist, any absent fragment makes the record `URL 不一�
 
 Exact matching applies these mechanical changes to both quote and extracted page text:
 
+Adjacent inline HTML elements are joined without adding spaces; block element boundaries add whitespace, and whitespace present in the HTML is preserved.
+
 1. Unicode NFKD and lowercase/casefold. Combining diacritic marks are removed from Latin letters; marks that distinguish kana and other scripts are preserved.
 2. Remove footnote tokens exactly matching `[n]` (digits, optional spaces).
 3. Replace punctuation/symbols with spaces, then collapse whitespace.

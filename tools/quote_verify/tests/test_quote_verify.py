@@ -131,6 +131,20 @@ class QuoteVerifyUnitTests(unittest.TestCase):
         self.assertIn("A visible", page["text"])
         self.assertNotIn("hidden", page["text"])
 
+    def test_inline_markup_joins_words_and_block_elements_separate_them(self):
+        inline_page = parse_html("<html><body>enša<i>ʾ</i></body></html>".encode("utf-8"))
+        self.assertEqual(inline_page["text"], "enšaʾ")
+        record = {"id": "inline", "agent": "test", "person": "p", "url": "https://example.org",
+                  "quotes": ["enšaʾ"], "verification_claim": "checked"}
+        self.assertEqual(quote_state(record, inline_page, None, False)["state"], "本文一致")
+
+        block_page = parse_html(b"<html><body><p>A</p><p>B</p></body></html>")
+        self.assertEqual(block_page["text"], "A B")
+
+    def test_footnote_in_superscript_stays_separated_after_normalization(self):
+        page = parse_html(b"<html><body>word<sup>[3]</sup> next</body></html>")
+        self.assertEqual(normalize_text(page["text"]), "word next")
+
     def test_numeric_year_change_is_not_near(self):
         pairs_file = EXTERNAL / "pairs.json"
         if pairs_file.is_file():
