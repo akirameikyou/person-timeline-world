@@ -7,13 +7,53 @@ from unittest.mock import patch
 
 import sys
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
-from quote_verify import fetch_page, find_saved_page, load_pages, markdown_report, normalize_url, normalize_text, parse_html, quote_state, read_input, run, same_page_redirect, split_fragments
+from quote_verify import fetch_page, find_saved_page, iri_to_uri, load_pages, main, markdown_report, normalize_url, normalize_text, parse_html, quote_state, read_input, run, same_page_redirect, split_fragments
 
 REPO = Path(__file__).resolve().parents[3]
 EXTERNAL = Path(r"C:\GitHub\person-timeline-world-work\experiment_candidate_extraction_001\verification")
 
 
 class QuoteVerifyUnitTests(unittest.TestCase):
+    def test_iri_is_converted_for_fetch_and_existing_escapes_are_preserved(self):
+        iri = "https://www.iranicaonline.org/articles/tarabi-maḥmud/keep%20this?q=é%2F#注"
+        expected = "https://www.iranicaonline.org/articles/tarabi-ma%E1%B8%A5mud/keep%20this?q=%C3%A9%2F#%E6%B3%A8"
+        self.assertEqual(iri_to_uri(iri), expected)
+        self.assertEqual(iri_to_uri("https://例え.テスト/道"), "https://xn--r8jz45g.xn--zckzah/%E9%81%93")
+
+        class Response:
+            status = 200
+            def __enter__(self): return self
+            def __exit__(self, *args): pass
+            def read(self, size): return b"<html><body>quote</body></html>"
+            def geturl(self): return expected
+
+        with patch("quote_verify.urlopen", return_value=Response()) as mocked:
+            page, reason = fetch_page(iri, 3)
+        self.assertIsNone(reason)
+        self.assertIsNotNone(page)
+        self.assertEqual(mocked.call_args.args[0].full_url, expected)
+
+    def test_unexpected_record_failure_does_not_stop_output(self):
+        records = [
+            {"id": "bad", "agent": "test", "person": "One", "url": "https://example.org/a", "quotes": ["quote"]},
+            {"id": "good", "agent": "test", "person": "Two", "url": "https://example.org/b", "quotes": ["quote"]},
+        ]
+        page = {"text": "quote", "title": "", "url": "https://example.org/b"}
+        with patch("quote_verify.fetch_page", side_effect=RuntimeError("unexpected network wrapper failure")):
+            results = run(records, {normalize_url(records[1]["url"]): page}, fetch_missing=True)
+        self.assertEqual([r["state"] for r in results], ["確認不能", "本文一致"])
+        self.assertIn("RuntimeError", results[0]["reason"])
+        self.assertEqual(results[1]["id"], "good")
+
+        with tempfile.TemporaryDirectory() as td:
+            input_path = Path(td) / "input.json"
+            json_path = Path(td) / "out.json"
+            md_path = Path(td) / "out.md"
+            input_path.write_text(json.dumps(records), encoding="utf-8")
+            with patch("quote_verify.fetch_page", side_effect=RuntimeError("unexpected")):
+                self.assertEqual(main([str(input_path), "--fetch-missing", "--json-out", str(json_path), "--markdown-out", str(md_path)]), 0)
+            self.assertEqual(len(json.loads(json_path.read_text(encoding="utf-8"))["results"]), 2)
+            self.assertIn("確認不能", md_path.read_text(encoding="utf-8"))
     def test_mediawiki_revision_ids_are_extracted_or_null(self):
         page = parse_html(b'''<html><script>mw.config.set({"wgRevisionId": 12345, "wgCurRevisionId": 67890, "wgPageName":"Example"});</script><body>text</body></html>''')
         self.assertEqual(page["page_revision"], 12345)

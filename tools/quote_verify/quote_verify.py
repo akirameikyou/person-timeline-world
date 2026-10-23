@@ -13,7 +13,7 @@ import sys
 import unicodedata
 from pathlib import Path
 from urllib.error import HTTPError, URLError
-from urllib.parse import parse_qsl, urlencode, unquote, urlsplit, urlunsplit
+from urllib.parse import parse_qsl, quote_from_bytes, urlencode, unquote, urlsplit, urlunsplit
 import ssl
 from urllib.request import Request, urlopen
 
@@ -93,10 +93,34 @@ def parse_html(raw: bytes) -> dict:
             "current_revision": mw_revision("wgCurRevisionId")}
 
 
+def _ascii_component(value: str) -> str:
+    """Percent encode only non-ASCII characters, preserving existing URI syntax."""
+    return "".join(ch if ord(ch) < 128 else quote_from_bytes(ch.encode("utf-8")) for ch in value)
+
+
+def iri_to_uri(url: str) -> str:
+    """Convert an HTTP(S) IRI to an ASCII URI without re-encoding existing escapes."""
+    p = urlsplit(url.strip())
+    host = p.hostname or ""
+    if ":" in host:  # IPv6 literal
+        host = f"[{host.lower()}]"
+    else:
+        host = host.encode("idna").decode("ascii").lower()
+    if p.port:
+        host = f"{host}:{p.port}"
+    if p.username is not None:
+        userinfo = _ascii_component(p.username)
+        if p.password is not None:
+            userinfo += ":" + _ascii_component(p.password)
+        host = userinfo + "@" + host
+    return urlunsplit((p.scheme.lower(), host, _ascii_component(p.path),
+                       _ascii_component(p.query), _ascii_component(p.fragment)))
+
+
 def normalize_url(url: str | None) -> str | None:
     if not url:
         return None
-    p = urlsplit(url.strip())
+    p = urlsplit(iri_to_uri(url))
     scheme = p.scheme.lower()
     host = (p.hostname or "").lower()
     port = p.port
@@ -245,6 +269,7 @@ def invalid_url_reason(url: str) -> str | None:
 
 def fetch_page(url: str, timeout: float, ca_file: str | Path | None = None) -> tuple[dict | None, str | None]:
     try:
+        url = iri_to_uri(url)
         request = Request(url, headers={"User-Agent": f"QuoteVerify/{VERSION} (standard single request; no access-control bypass)"})
         context = ssl.create_default_context(cafile=str(ca_file) if ca_file else None)
         with urlopen(request, timeout=timeout, context=context) as response:
@@ -379,14 +404,14 @@ def current_wikipedia_url(url: str) -> str | None:
     if not title or title.lower() == "index.php":
         return None
     path = parsed.path if parsed.path.lower().endswith("index.php") else "/w/index.php"
-    return urlunsplit((parsed.scheme, parsed.netloc, path, urlencode({"title": title}), ""))
+    return iri_to_uri(urlunsplit((parsed.scheme, parsed.netloc, path, urlencode({"title": title}), "")))
 
 
 def iso_now() -> str:
     return datetime.now(timezone.utc).isoformat(timespec="seconds").replace("+00:00", "Z")
 
 
-def run(records: list[dict], pages: dict[str, dict], *, fetch_missing=False, timeout=12.0, ca_file: str | Path | None = None) -> list[dict]:
+def _run_records(records: list[dict], pages: dict[str, dict], *, fetch_missing=False, timeout=12.0, ca_file: str | Path | None = None) -> list[dict]:
     results = []
     for record in records:
         url = record.get("url", "")
@@ -437,6 +462,24 @@ def run(records: list[dict], pages: dict[str, dict], *, fetch_missing=False, tim
                         "fetched_at": fetched_at, "page_revision": page.get("page_revision") if page else None,
                         "current_revision": page.get("current_revision") if page else None,
                         "current_version_check": current_check, **result})
+    return results
+
+
+def run(records: list[dict], pages: dict[str, dict], *, fetch_missing=False, timeout=12.0, ca_file: str | Path | None = None) -> list[dict]:
+    """Verify each record independently so an unexpected failure cannot abort a batch."""
+    results = []
+    for record in records:
+        try:
+            results.extend(_run_records([record], pages, fetch_missing=fetch_missing,
+                                        timeout=timeout, ca_file=ca_file))
+        except Exception as exc:
+            results.append({"id": record.get("id"), "agent": record.get("agent"),
+                            "person": record.get("person"), "url": record.get("url", ""),
+                            "page_match": None, "accessed_at": record.get("accessed_at"),
+                            "fetched_at": None, "page_revision": None, "current_revision": None,
+                            "current_version_check": None, "state": "確認不能",
+                            "reason": f"レコード処理で予期しない例外: {type(exc).__name__}: {str(exc)[:240]}",
+                            "fragments": []})
     return results
 
 
