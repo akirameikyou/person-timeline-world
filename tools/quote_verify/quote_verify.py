@@ -13,6 +13,7 @@ import unicodedata
 from pathlib import Path
 from urllib.error import HTTPError, URLError
 from urllib.parse import unquote, urlsplit, urlunsplit
+import ssl
 from urllib.request import Request, urlopen
 
 VERSION = "0.1.0"
@@ -93,9 +94,23 @@ def normalize_text(value: str) -> str:
     """S3-compatible conservative normalization for case, marks, punctuation and [n]."""
     value = FOOTNOTE_RE.sub(" ", value)
     value = unicodedata.normalize("NFKD", value.casefold())
-    value = "".join(ch for ch in value if not unicodedata.combining(ch))
+    chars = []
+    base = ""
+    for ch in value:
+        if unicodedata.combining(ch):
+            # Remove Latin diacritics, but preserve marks used to distinguish kana.
+            if base and unicodedata.name(base, "").startswith("LATIN "):
+                continue
+            chars.append(ch)
+        else:
+            chars.append(ch)
+            if ch.isalpha():
+                base = ch
+            elif not ch.isspace():
+                base = ""
+    value = unicodedata.normalize("NFKC", "".join(chars))
     # Punctuation and symbols become separators, so words never concatenate.
-    value = "".join(ch if ch.isalnum() else " " for ch in value)
+    value = "".join(ch if ch.isalnum() or unicodedata.combining(ch) else " " for ch in value)
     return " ".join(value.split())
 
 
@@ -192,16 +207,35 @@ def read_input(path: Path) -> tuple[list[dict], str]:
     return records, "candidate-json"
 
 
-def fetch_page(url: str, timeout: float) -> tuple[dict | None, str | None]:
+INVALID_PERCENT_RE = re.compile(r"%(?![0-9a-fA-F]{2})")
+
+
+def invalid_url_reason(url: str) -> str | None:
+    if INVALID_PERCENT_RE.search(url):
+        return "URL が不正: malformed percent escape"
+    try:
+        parsed = urlsplit(url)
+        if parsed.scheme.lower() not in {"http", "https"} or not parsed.hostname:
+            return "URL が不正: expected an absolute HTTP(S) URL"
+        parsed.port
+    except ValueError:
+        return "URL が不正: malformed URL"
+    return None
+
+
+def fetch_page(url: str, timeout: float, ca_file: str | Path | None = None) -> tuple[dict | None, str | None]:
     try:
         request = Request(url, headers={"User-Agent": f"QuoteVerify/{VERSION} (standard single request; no access-control bypass)"})
-        with urlopen(request, timeout=timeout) as response:
+        context = ssl.create_default_context(cafile=str(ca_file) if ca_file else None)
+        with urlopen(request, timeout=timeout, context=context) as response:
             if response.status != 200:
                 return None, f"HTTP {response.status}; page was not verified"
             body = response.read(8_000_001)
             if len(body) > 8_000_000:
                 return None, "response exceeded 8 MB safety limit"
-            return parse_html(body), None
+            page = parse_html(body)
+            page["final_url"] = response.geturl()
+            return page, None
     except HTTPError as exc:
         return None, f"HTTP {exc.code}; access restrictions are not bypassed"
     except (URLError, TimeoutError, OSError) as exc:
@@ -291,16 +325,52 @@ def find_saved_page(record: dict, pages: dict[str, dict]) -> tuple[dict | None, 
     return None, None
 
 
-def run(records: list[dict], pages: dict[str, dict], *, fetch_missing=False, timeout=12.0) -> list[dict]:
+def same_page_redirect(requested_url: str, final_url: str, record: dict, page: dict) -> bool:
+    """Accept URL spelling changes that still identify the requested page."""
+    requested_parts, final_parts = urlsplit(requested_url), urlsplit(final_url)
+    if requested_parts.scheme.lower() not in {"http", "https"} or final_parts.scheme.lower() not in {"http", "https"}:
+        return False
+    requested_https = normalize_url(urlunsplit(("https", *requested_parts[1:])))
+    final_https = normalize_url(urlunsplit(("https", *final_parts[1:])))
+    if requested_https == final_https:
+        return True
+    requested, final = requested_parts, final_parts
+    wiki_hosts = {"en.wikipedia.org", "www.en.wikipedia.org", "en.m.wikipedia.org"}
+    if (requested.hostname or "").lower() in wiki_hosts and (final.hostname or "").lower() in wiki_hosts:
+        requested_slug = unquote(requested.path.rsplit("/", 1)[-1])
+        final_slug = unquote(final.path.rsplit("/", 1)[-1])
+        person_key = normalize_text(record.get("person", ""))
+        title_key = normalize_text(page.get("title", ""))
+        return bool(person_key and person_key in title_key and normalize_text(requested_slug) == normalize_text(final_slug))
+    return False
+
+
+def run(records: list[dict], pages: dict[str, dict], *, fetch_missing=False, timeout=12.0, ca_file: str | Path | None = None) -> list[dict]:
     results = []
     for record in records:
         url = record.get("url", "")
+        bad_url = invalid_url_reason(url)
+        claim = record.get("verification_claim", "checked")
+        if bad_url:
+            if claim in ("not_checked", "unverified", "未確認"):
+                result = quote_state(record, None, None, fetch_missing)
+                result["reason"] += f"; {bad_url}"
+            else:
+                result = {"state": "未照合", "reason": bad_url, "fragments": []}
+            results.append({"id": record.get("id"), "agent": record.get("agent"), "person": record.get("person"),
+                            "url": url, "page_match": None, **result})
+            continue
         page, page_match = find_saved_page(record, pages)
         reason = None
         if page is None and fetch_missing and url:
-            page, reason = fetch_page(url, timeout)
+            page, reason = fetch_page(url, timeout, ca_file)
             if page is not None:
-                page_match = "fetched-url"
+                final_url = page.get("final_url", url)
+                if not same_page_redirect(url, final_url, record, page):
+                    reason = f"redirected to a different page; final URL: {final_url}"
+                    page = None
+                else:
+                    page_match = "fetched-url"
         result = quote_state(record, page, reason, fetch_missing)
         results.append({"id": record.get("id"), "agent": record.get("agent"), "person": record.get("person"),
                         "url": url, "page_match": page_match, **result})
@@ -341,11 +411,12 @@ def main(argv=None) -> int:
     parser.add_argument("--markdown-out", type=Path, help="write human-readable report")
     parser.add_argument("--fetch-missing", action="store_true", help="make one ordinary HTTP request for URLs without a matching saved page; never bypass access controls")
     parser.add_argument("--timeout", type=float, default=12.0)
+    parser.add_argument("--ca-file", type=Path, help="CA bundle file for HTTPS certificate verification (verification remains enabled)")
     args = parser.parse_args(argv)
     try:
         records, input_format = read_input(args.input)
         pages, inventory = load_pages(args.pages_dir)
-        results = run(records, pages, fetch_missing=args.fetch_missing, timeout=args.timeout)
+        results = run(records, pages, fetch_missing=args.fetch_missing, timeout=args.timeout, ca_file=args.ca_file)
         payload = {"tool_version": VERSION, "input_format": input_format, "fetch_missing": args.fetch_missing,
                    "saved_pages": inventory, "results": results}
         json_text = json.dumps(payload, ensure_ascii=False, indent=2) + "\n"

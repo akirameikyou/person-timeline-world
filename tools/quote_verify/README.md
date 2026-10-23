@@ -16,7 +16,18 @@ python tools/quote_verify/quote_verify.py `
 
 The `pairs.json` legacy array format is accepted for the regression run. For new work, use the JSON object format shown below. No network requests are made by default. `--fetch-missing` explicitly permits one ordinary HTTP request per missing URL; access controls are not bypassed. HTTP 401/403, login/paywall blocks, fetch errors, and bot challenge pages must be treated as **確認不能** after a fetch attempt. If no saved file exists and fetching is disabled, the result is **未照合**.
 
+On Windows, if Python cannot find the machine's trusted CA bundle, pass its path with `--ca-file`. For example, with Git for Windows:
+
+```powershell
+python tools/quote_verify/quote_verify.py candidates.json --fetch-missing `
+  --ca-file 'C:\Program Files\Git\mingw64\etc\ssl\certs\ca-bundle.crt'
+```
+
+HTTPS certificate verification remains enabled; this option only supplies a CA bundle. A malformed percent escape in a URL (for example `%D%`) is rejected before any fetch and reported as **未照合** with `URL が不正`. If the submitter declared `not_checked`, the state stays **未確認申告** and the reason also records the invalid URL.
+
 Saved files are matched to a submitted URL using their `<link rel="canonical">`, `og:url`, or `twitter:url`. A page for another URL is not silently treated as the requested source, even if it contains similar text. One exception is labeled in the report: a unique English Wikipedia page whose slug is equivalent after punctuation normalization and whose title contains the candidate name is treated as an inferred same-site redirect alias; inspect `page_match` before treating that association as established.
+
+For fetched pages, the final response URL is checked before quotes are compared. Redirects are accepted as the same page when the normalized host/path/query match (including `http` to `https`, default ports, and a trailing slash). For English Wikipedia only, punctuation differences in the slug are also accepted when the page title contains the candidate name. Any other redirect is **確認不能** and its reason includes the final URL; this includes redirects that discard a requested path and land on a site home page. When a redirect is ambiguous, the tool treats it as **確認不能**.
 
 ## New input format
 
@@ -62,7 +73,7 @@ Where several fragments exist, any absent fragment makes the record `URL 不一�
 
 Exact matching applies these mechanical changes to both quote and extracted page text:
 
-1. Unicode NFKD, lowercase/casefold, and remove combining diacritic marks.
+1. Unicode NFKD and lowercase/casefold. Combining diacritic marks are removed from Latin letters; marks that distinguish kana and other scripts are preserved.
 2. Remove footnote tokens exactly matching `[n]` (digits, optional spaces).
 3. Replace punctuation/symbols with spaces, then collapse whitespace.
 4. If the quote contains `...` (3+ periods) or `…`, split at those markers and check each nonempty fragment independently. The tool does not assume omitted text between fragments.

@@ -1,11 +1,13 @@
 import json
 from pathlib import Path
+import ssl
 import tempfile
 import unittest
+from unittest.mock import patch
 
 import sys
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
-from quote_verify import find_saved_page, load_pages, normalize_text, parse_html, quote_state, read_input, run, split_fragments
+from quote_verify import fetch_page, find_saved_page, load_pages, normalize_text, parse_html, quote_state, read_input, run, same_page_redirect, split_fragments
 
 REPO = Path(__file__).resolve().parents[3]
 EXTERNAL = Path(r"C:\GitHub\person-timeline-world-work\experiment_candidate_extraction_001\verification")
@@ -14,6 +16,11 @@ EXTERNAL = Path(r"C:\GitHub\person-timeline-world-work\experiment_candidate_extr
 class QuoteVerifyUnitTests(unittest.TestCase):
     def test_normalization_diacritics_punctuation_footnotes(self):
         self.assertEqual(normalize_text("Muḥammad [12] — Naṣīr-al-Dīn!"), "muhammad nasir al din")
+
+    def test_normalization_preserves_japanese_voicing_marks(self):
+        self.assertEqual(normalize_text("書道で"), "書道で")
+        self.assertNotEqual(normalize_text("書道で"), normalize_text("書道て"))
+        self.assertEqual(normalize_text("ば は ぱ"), "ば は ぱ")
 
     def test_ellipsis_splits_without_joining(self):
         self.assertEqual(split_fragments("alpha... beta … gamma"), ["alpha", "beta", "gamma"])
@@ -79,6 +86,54 @@ class QuoteVerifyUnitTests(unittest.TestCase):
         self.assertEqual(quote_state(unchecked, page, None, False)["state"], "未確認申告")
         self.assertEqual(quote_state(exact, None, None, False)["state"], "未照合")
         self.assertEqual(quote_state(exact, None, "HTTP 403", True)["state"], "確認不能")
+
+    def test_different_redirect_target_is_unavailable_and_reports_final_url(self):
+        requested = "https://museum.example/archives/leaflet/412/index.html"
+        record = {"id": "redirect", "agent": "test", "person": "p", "url": requested,
+                  "quotes": ["quote from the requested page"], "verification_claim": "checked"}
+        fetched = {"title": "Maintenance notice", "text": "unrelated maintenance content",
+                   "final_url": "https://museum.example/"}
+        with patch("quote_verify.fetch_page", return_value=(fetched, None)):
+            result = run([record], {}, fetch_missing=True)[0]
+        self.assertEqual(result["state"], "確認不能")
+        self.assertIn("https://museum.example/", result["reason"])
+        self.assertEqual(result["page_match"], None)
+
+    def test_same_page_redirect_variants_are_accepted(self):
+        record = {"person": "Example Person"}
+        page = {"title": "Example Person - Wikipedia"}
+        self.assertTrue(same_page_redirect("http://example.org/page", "https://example.org/page/", record, page))
+        self.assertTrue(same_page_redirect("https://en.wikipedia.org/wiki/Example-Person", "https://en.wikipedia.org/wiki/Example_Person", record, page))
+        self.assertFalse(same_page_redirect("https://example.org/page", "https://example.org/", record, page))
+
+    def test_ca_file_is_used_for_verified_https_fetch(self):
+        class Response:
+            status = 200
+            def __enter__(self): return self
+            def __exit__(self, *args): pass
+            def read(self, size): return b"<html><body>quote</body></html>"
+            def geturl(self): return "https://example.org/page"
+
+        with patch("quote_verify.urlopen", return_value=Response()) as mocked, \
+                patch("quote_verify.ssl.create_default_context", return_value=ssl.create_default_context()) as context_factory:
+            page, reason = fetch_page("https://example.org/page", 3, r"C:\certs\ca-bundle.crt")
+        self.assertIsNone(reason)
+        self.assertEqual(page["final_url"], "https://example.org/page")
+        context_factory.assert_called_once_with(cafile=r"C:\certs\ca-bundle.crt")
+        self.assertEqual(mocked.call_args.kwargs["context"].verify_mode, ssl.CERT_REQUIRED)
+
+    def test_invalid_percent_escape_skips_fetch_and_keeps_unverified_claim(self):
+        bad_url = "https://ja.wikipedia.org/wiki/%E5%AE%AE%E5%B7%D%E9%95%B7%E6%98%A5"
+        checked = {"id": "bad-url", "agent": "Gemini", "person": "宮川長春", "url": bad_url,
+                   "quotes": ["quote"], "verification_claim": "checked"}
+        unchecked = dict(checked, id="unchecked", verification_claim="not_checked")
+        with patch("quote_verify.fetch_page") as mocked:
+            checked_result, unchecked_result = run([checked, unchecked], {}, fetch_missing=True)
+        mocked.assert_not_called()
+        self.assertEqual(checked_result["state"], "未照合")
+        self.assertIn("URL が不正", checked_result["reason"])
+        self.assertEqual(unchecked_result["state"], "未確認申告")
+        self.assertIn("URL が不正", unchecked_result["reason"])
 
     def test_legacy_pairs_are_read(self):
         with tempfile.TemporaryDirectory() as td:
