@@ -29,6 +29,14 @@ Saved files are matched to a submitted URL using their `<link rel="canonical">`,
 
 For fetched pages, the final response URL is checked before quotes are compared. Redirects are accepted as the same page when the normalized host/path/query match (including `http` to `https`, default ports, and a trailing slash). For English Wikipedia only, punctuation differences in the slug are also accepted when the page title contains the candidate name. Any other redirect is **確認不能** and its reason includes the final URL; this includes redirects that discard a requested path and land on a site home page. When a redirect is ambiguous, the tool treats it as **確認不能**.
 
+## Revision and access-time records
+
+For MediaWiki HTML, the tool reads `wgRevisionId` (the revision represented by the page) and `wgCurRevisionId` (the current revision) from `mw.config` and reports them as `page_revision` and `current_revision`. Missing values are `null`. Saved pages from `--pages-dir` are parsed the same way. These values come from the page HTML rather than the candidate's claims.
+
+When `--fetch-missing` is enabled for a Wikipedia URL containing `oldid=`, the supplied revision is checked as the primary result. The tool also fetches that article's current `index.php?title=...` URL once and reports its separate state and reason as `current_version_check`. A difference between the two versions is called out in the reason; it does not change the primary state. URLs without `oldid=` do not trigger this extra request. Ordinary access restrictions still result in **確認不能** and are not bypassed.
+
+Candidate JSON may include `accessed_at` as a string or `null`. The report labels this as **申告の閲覧日時** and does not use it as evidence. `fetched_at` records the tool's UTC time when it makes a network request; it is `null` when no request was made.
+
 ## New input format
 
 One citation/source URL per record; a person can have multiple records if they cite multiple pages. Keep the submitter's check claim distinct from this tool's result. See `candidate.schema.json` for validation.
@@ -42,6 +50,7 @@ One citation/source URL per record; a person can have multiple records if they c
       "agent": "ExampleModel",
       "person": "Example person",
       "url": "https://example.org/biography",
+      "accessed_at": "2026-10-23T11:00:00+09:00",
       "source_title": "Page title",
       "publisher": "Publisher",
       "source_type": "museum page",

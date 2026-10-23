@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import argparse
 import difflib
+from datetime import datetime, timezone
 import html
 from html.parser import HTMLParser
 import json
@@ -12,7 +13,7 @@ import sys
 import unicodedata
 from pathlib import Path
 from urllib.error import HTTPError, URLError
-from urllib.parse import unquote, urlsplit, urlunsplit
+from urllib.parse import parse_qsl, urlencode, unquote, urlsplit, urlunsplit
 import ssl
 from urllib.request import Request, urlopen
 
@@ -32,8 +33,10 @@ class VisibleText(HTMLParser):
         self.title_parts: list[str] = []
         self.canonical_urls: list[str] = []
         self.meta: dict[str, str] = {}
+        self.scripts: list[str] = []
         self._skip = 0
         self._in_title = False
+        self._in_script = False
 
     def handle_starttag(self, tag, attrs):
         attrs = dict(attrs)
@@ -41,6 +44,8 @@ class VisibleText(HTMLParser):
             self._skip += 1
         if tag == "title":
             self._in_title = True
+        if tag == "script":
+            self._in_script = True
         if tag == "link" and "canonical" in (attrs.get("rel") or "").lower().split():
             if attrs.get("href"):
                 self.canonical_urls.append(attrs["href"])
@@ -54,12 +59,16 @@ class VisibleText(HTMLParser):
     def handle_endtag(self, tag):
         if tag == "title":
             self._in_title = False
+        if tag == "script":
+            self._in_script = False
         if tag in SKIP_TAGS and self._skip:
             self._skip -= 1
         if not self._skip and tag in BLOCK_TAGS:
             self.parts.append(" ")
 
     def handle_data(self, data):
+        if self._in_script:
+            self.scripts.append(data)
         if self._in_title:
             self.title_parts.append(data)
         if not self._skip:
@@ -73,7 +82,15 @@ def parse_html(raw: bytes) -> dict:
     body = re.sub(r"\s+", " ", html.unescape(" ".join(parser.parts))).strip()
     canonical = parser.canonical_urls[0] if parser.canonical_urls else None
     page_url = canonical or parser.meta.get("og:url") or parser.meta.get("twitter:url")
-    return {"text": body, "title": " ".join(parser.title_parts).strip(), "url": page_url}
+    scripts = "\n".join(parser.scripts)
+
+    def mw_revision(key: str) -> int | None:
+        match = re.search(r"[\"']" + re.escape(key) + r"[\"']\s*:\s*[\"']?(\d+)", scripts)
+        return int(match.group(1)) if match else None
+
+    return {"text": body, "title": " ".join(parser.title_parts).strip(), "url": page_url,
+            "page_revision": mw_revision("wgRevisionId"),
+            "current_revision": mw_revision("wgCurRevisionId")}
 
 
 def normalize_url(url: str | None) -> str | None:
@@ -172,7 +189,8 @@ def load_pages(pages_dir: Path | None) -> tuple[dict[str, dict], list[dict]]:
     for file in sorted([*pages_dir.glob("*.html"), *pages_dir.glob("*.htm")]):
         page = parse_html(file.read_bytes())
         normalized = normalize_url(page.get("url"))
-        item = {"file": str(file), "title": page["title"], "url": page.get("url"), "normalized_url": normalized, "text": page["text"]}
+        item = {"file": str(file), "title": page["title"], "url": page.get("url"), "normalized_url": normalized, "text": page["text"],
+                "page_revision": page.get("page_revision"), "current_revision": page.get("current_revision")}
         inventory.append({k: v for k, v in item.items() if k != "text"})
         if normalized:
             by_url.setdefault(normalized, item)
@@ -204,6 +222,8 @@ def read_input(path: Path) -> tuple[list[dict], str]:
                 raise ValueError(f"record #{index} is missing required field {key!r}")
         if not isinstance(record["quotes"], list) or not all(isinstance(q, str) for q in record["quotes"]):
             raise ValueError(f"record #{index} quotes must be an array of strings")
+        if "accessed_at" in record and record["accessed_at"] is not None and not isinstance(record["accessed_at"], str):
+            raise ValueError(f"record #{index} accessed_at must be a string or null")
     return records, "candidate-json"
 
 
@@ -345,6 +365,27 @@ def same_page_redirect(requested_url: str, final_url: str, record: dict, page: d
     return False
 
 
+def current_wikipedia_url(url: str) -> str | None:
+    """Build the article's current index.php URL from a Wikipedia oldid URL."""
+    parsed = urlsplit(url)
+    query = parse_qsl(parsed.query, keep_blank_values=True)
+    oldids = [value for key, value in query if key.lower() == "oldid"]
+    host = (parsed.hostname or "").lower()
+    if not oldids or (host != "wikipedia.org" and not host.endswith(".wikipedia.org")):
+        return None
+    title = next((value for key, value in query if key.lower() == "title"), None)
+    if not title:
+        title = unquote(parsed.path.rsplit("/", 1)[-1])
+    if not title or title.lower() == "index.php":
+        return None
+    path = parsed.path if parsed.path.lower().endswith("index.php") else "/w/index.php"
+    return urlunsplit((parsed.scheme, parsed.netloc, path, urlencode({"title": title}), ""))
+
+
+def iso_now() -> str:
+    return datetime.now(timezone.utc).isoformat(timespec="seconds").replace("+00:00", "Z")
+
+
 def run(records: list[dict], pages: dict[str, dict], *, fetch_missing=False, timeout=12.0, ca_file: str | Path | None = None) -> list[dict]:
     results = []
     for record in records:
@@ -358,11 +399,14 @@ def run(records: list[dict], pages: dict[str, dict], *, fetch_missing=False, tim
             else:
                 result = {"state": "未照合", "reason": bad_url, "fragments": []}
             results.append({"id": record.get("id"), "agent": record.get("agent"), "person": record.get("person"),
-                            "url": url, "page_match": None, **result})
+                            "url": url, "page_match": None, "accessed_at": record.get("accessed_at"),
+                            "fetched_at": None, "page_revision": None, "current_revision": None, **result})
             continue
         page, page_match = find_saved_page(record, pages)
         reason = None
+        fetched_at = None
         if page is None and fetch_missing and url:
+            fetched_at = iso_now()
             page, reason = fetch_page(url, timeout, ca_file)
             if page is not None:
                 final_url = page.get("final_url", url)
@@ -372,17 +416,38 @@ def run(records: list[dict], pages: dict[str, dict], *, fetch_missing=False, tim
                 else:
                     page_match = "fetched-url"
         result = quote_state(record, page, reason, fetch_missing)
+        current_check = None
+        current_url = current_wikipedia_url(url) if fetch_missing else None
+        if current_url:
+            fetched_at = fetched_at or iso_now()
+            current_page, current_reason = fetch_page(current_url, timeout, ca_file)
+            if current_page is not None:
+                final_url = current_page.get("final_url", current_url)
+                if not same_page_redirect(current_url, final_url, record, current_page):
+                    current_reason = f"redirected to a different page; final URL: {final_url}"
+                    current_page = None
+            current_result = quote_state(record, current_page, current_reason, True)
+            current_check = {"state": current_result["state"], "reason": current_result["reason"]}
+            if result["state"] == "URL 不一致" and current_check["state"] in ("本文一致", "ほぼ一致"):
+                result["reason"] += "; 引用は指定の版になく、現在の版にある（版の申告と食い違い）"
+            elif result["state"] in ("本文一致", "ほぼ一致") and current_check["state"] == "URL 不一致":
+                current_check["reason"] += "; 引用は指定の版にあり、現在の版にはない（版の申告と食い違い）"
         results.append({"id": record.get("id"), "agent": record.get("agent"), "person": record.get("person"),
-                        "url": url, "page_match": page_match, **result})
+                        "url": url, "page_match": page_match, "accessed_at": record.get("accessed_at"),
+                        "fetched_at": fetched_at, "page_revision": page.get("page_revision") if page else None,
+                        "current_revision": page.get("current_revision") if page else None,
+                        "current_version_check": current_check, **result})
     return results
 
 
 def markdown_report(results: list[dict], inventory: list[dict], input_format: str) -> str:
     lines = ["# Quote verification report", "", f"- Tool version: `{VERSION}`", f"- Input format: `{input_format}`", "- Network fetching: disabled unless explicitly requested", "",
-             "## Results", "", "| ID | Agent | Candidate | URL | State | Reason |", "|---|---|---|---|---|---|"]
+             "## Results", "", "| ID | Agent | Candidate | URL | State | Reason | 申告の閲覧日時 | 取得日時 | 読んだ版 | 現在の版 | 現行版チェック |", "|---|---|---|---|---|---|---|---|---:|---:|---|"]
     for r in results:
         safe = lambda value: str(value or "").replace("|", "\\|").replace("\n", " ")
-        lines.append(f"| {safe(r['id'])} | {safe(r['agent'])} | {safe(r['person'])} | {safe(r['url'])} | {safe(r['state'])} | {safe(r['reason'])} |")
+        check = r.get("current_version_check")
+        check_text = f"{check['state']}: {check['reason']}" if check else ""
+        lines.append(f"| {safe(r['id'])} | {safe(r['agent'])} | {safe(r['person'])} | {safe(r['url'])} | {safe(r['state'])} | {safe(r['reason'])} | {safe(r.get('accessed_at'))} | {safe(r.get('fetched_at'))} | {safe(r.get('page_revision'))} | {safe(r.get('current_revision'))} | {safe(check_text)} |")
     lines.extend(["", "## Fragment details", ""])
     for r in results:
         lines.append(f"### {r['id']} — {r['person']} ({r['state']})")

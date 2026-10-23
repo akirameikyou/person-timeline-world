@@ -7,13 +7,74 @@ from unittest.mock import patch
 
 import sys
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
-from quote_verify import fetch_page, find_saved_page, load_pages, normalize_text, parse_html, quote_state, read_input, run, same_page_redirect, split_fragments
+from quote_verify import fetch_page, find_saved_page, load_pages, markdown_report, normalize_url, normalize_text, parse_html, quote_state, read_input, run, same_page_redirect, split_fragments
 
 REPO = Path(__file__).resolve().parents[3]
 EXTERNAL = Path(r"C:\GitHub\person-timeline-world-work\experiment_candidate_extraction_001\verification")
 
 
 class QuoteVerifyUnitTests(unittest.TestCase):
+    def test_mediawiki_revision_ids_are_extracted_or_null(self):
+        page = parse_html(b'''<html><script>mw.config.set({"wgRevisionId": 12345, "wgCurRevisionId": 67890, "wgPageName":"Example"});</script><body>text</body></html>''')
+        self.assertEqual(page["page_revision"], 12345)
+        self.assertEqual(page["current_revision"], 67890)
+        plain = parse_html(b"<html><body>plain page</body></html>")
+        self.assertIsNone(plain["page_revision"])
+        self.assertIsNone(plain["current_revision"])
+
+    def test_saved_pages_keep_mediawiki_revision_ids(self):
+        with tempfile.TemporaryDirectory() as td:
+            saved = Path(td) / "wiki.html"
+            saved.write_text('''<html><head><link rel="canonical" href="https://en.wikipedia.org/wiki/Example"></head><script>mw.config.set({"wgRevisionId": 100, "wgCurRevisionId": 200});</script><body>text</body></html>''', encoding="utf-8")
+            pages, inventory = load_pages(Path(td))
+        page = pages[normalize_url("https://en.wikipedia.org/wiki/Example")]
+        self.assertEqual((page["page_revision"], page["current_revision"]), (100, 200))
+        self.assertEqual((inventory[0]["page_revision"], inventory[0]["current_revision"]), (100, 200))
+
+    def test_oldid_checks_current_version_separately_and_preserves_primary_state(self):
+        url = "https://en.wikipedia.org/w/index.php?title=Example_Person&oldid=123"
+        quote = "This quotation appears only in the current revision of this article."
+        record = {"id": "old", "agent": "test", "person": "Example Person", "url": url,
+                  "quotes": [quote], "verification_claim": "checked"}
+        old_page = {"text": "An earlier version without the quoted material.", "title": "Example Person - Wikipedia",
+                    "url": url, "final_url": url, "page_revision": 123, "current_revision": 456}
+        current_url = "https://en.wikipedia.org/w/index.php?title=Example_Person"
+        current_page = {"text": quote, "title": "Example Person - Wikipedia", "url": current_url,
+                        "final_url": current_url, "page_revision": 456, "current_revision": 456}
+        with patch("quote_verify.fetch_page", side_effect=[(old_page, None), (current_page, None)]) as mocked:
+            result = run([record], {}, fetch_missing=True)[0]
+        self.assertEqual(mocked.call_count, 2)
+        self.assertEqual(result["state"], "URL 不一致")
+        self.assertIn("引用は指定の版になく、現在の版にある（版の申告と食い違い）", result["reason"])
+        self.assertEqual(result["current_version_check"]["state"], "本文一致")
+        self.assertEqual(result["page_revision"], 123)
+        self.assertEqual(result["current_revision"], 456)
+        self.assertIsNotNone(result["fetched_at"])
+
+    def test_url_without_oldid_does_not_fetch_current_version(self):
+        url = "https://en.wikipedia.org/w/index.php?title=Example_Person"
+        record = {"id": "current", "agent": "test", "person": "Example Person", "url": url,
+                  "quotes": ["the sentence"], "verification_claim": "checked"}
+        page = {"text": "the sentence", "title": "Example Person - Wikipedia", "final_url": url}
+        with patch("quote_verify.fetch_page", return_value=(page, None)) as mocked:
+            result = run([record], {}, fetch_missing=True)[0]
+        mocked.assert_called_once_with(url, 12.0, None)
+        self.assertIsNone(result["current_version_check"])
+
+    def test_accessed_at_is_reported_as_claim_and_does_not_affect_match(self):
+        url = "https://example.org/page"
+        record = {"id": "time", "agent": "test", "person": "p", "url": url,
+                  "accessed_at": "2026-10-23T02:00:00+09:00", "quotes": ["the quoted sentence"],
+                  "verification_claim": "checked"}
+        page = {"text": "the quoted sentence", "title": "", "url": url}
+        result = run([record], {normalize_url(url): page})[0]
+        self.assertEqual(result["state"], "本文一致")
+        self.assertEqual(result["accessed_at"], record["accessed_at"])
+        self.assertIsNone(result["fetched_at"])
+        report = markdown_report([result], [], "candidate-json")
+        self.assertIn("申告の閲覧日時", report)
+        self.assertIn(record["accessed_at"], report)
+
     def test_normalization_diacritics_punctuation_footnotes(self):
         self.assertEqual(normalize_text("Muḥammad [12] — Naṣīr-al-Dīn!"), "muhammad nasir al din")
 

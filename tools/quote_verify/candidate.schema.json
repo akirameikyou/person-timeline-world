@@ -11,6 +11,7 @@
     "agent": {"type": "string", "minLength": 1},
     "person": {"type": "string", "minLength": 1},
     "url": {"type": "string", "format": "uri"},
+    "accessed_at": {"type": ["string", "null"], "description": "Submitter-reported page access time; not used as verification evidence."},
     "source_title": {"type": ["string", "null"]},
     "publisher": {"type": ["string", "null"]},
     "source_type": {"type": ["string", "null"]},
