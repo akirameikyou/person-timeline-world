@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import argparse
 import difflib
+import hashlib
 from datetime import datetime, timezone
 import html
 from html.parser import HTMLParser
@@ -208,16 +209,35 @@ def _near_match(query: str, body: str) -> tuple[bool, float, str | None, bool]:
 def load_pages(pages_dir: Path | None) -> tuple[dict[str, dict], list[dict]]:
     by_url: dict[str, dict] = {}
     inventory = []
+    by_file: dict[str, dict] = {}
     if not pages_dir:
         return by_url, inventory
     for file in sorted([*pages_dir.glob("*.html"), *pages_dir.glob("*.htm")]):
         page = parse_html(file.read_bytes())
         normalized = normalize_url(page.get("url"))
-        item = {"file": str(file), "title": page["title"], "url": page.get("url"), "normalized_url": normalized, "text": page["text"],
+        item = {"file": str(file), "saved_file": file.name, "title": page["title"], "url": page.get("url"), "normalized_url": normalized, "text": page["text"],
                 "page_revision": page.get("page_revision"), "current_revision": page.get("current_revision")}
         inventory.append({k: v for k, v in item.items() if k != "text"})
+        by_file[file.name] = item
         if normalized:
             by_url.setdefault(normalized, item)
+    index_path = pages_dir / "pages_index.jsonl"
+    if index_path.is_file():
+        for line in index_path.read_text(encoding="utf-8").splitlines():
+            if not line.strip():
+                continue
+            try:
+                entry = json.loads(line)
+            except json.JSONDecodeError:
+                continue
+            file_name = entry.get("file")
+            requested = normalize_url(entry.get("requested_url"))
+            if not file_name or not requested or entry.get("same_page") is not True:
+                continue
+            file_path = pages_dir / Path(file_name).name
+            if file_path.name not in by_file or not file_path.is_file():
+                continue
+            by_url.setdefault(requested, by_file[file_path.name])
     return by_url, inventory
 
 
@@ -280,6 +300,8 @@ def fetch_page(url: str, timeout: float, ca_file: str | Path | None = None) -> t
                 return None, "response exceeded 8 MB safety limit"
             page = parse_html(body)
             page["final_url"] = response.geturl()
+            page["_body_bytes"] = body
+            page["_status"] = response.status
             return page, None
     except HTTPError as exc:
         return None, f"HTTP {exc.code}; access restrictions are not bypassed"
@@ -357,7 +379,8 @@ def find_saved_page(record: dict, pages: dict[str, dict]) -> tuple[dict | None, 
     slug_key = normalize_text(slug)
     person_key = normalize_text(record.get("person", ""))
     aliases = []
-    for page in pages.values():
+    unique_pages = {page.get("file", str(id(page))): page for page in pages.values()}
+    for page in unique_pages.values():
         canonical = urlsplit(page.get("url") or "")
         canonical_slug = unquote(canonical.path.rsplit("/", 1)[-1])
         title_key = normalize_text(page.get("title", ""))
@@ -411,7 +434,31 @@ def iso_now() -> str:
     return datetime.now(timezone.utc).isoformat(timespec="seconds").replace("+00:00", "Z")
 
 
-def _run_records(records: list[dict], pages: dict[str, dict], *, fetch_missing=False, timeout=12.0, ca_file: str | Path | None = None) -> list[dict]:
+def save_fetched_page(directory: Path, requested_url: str, page: dict | None,
+                      reason: str | None, fetched_at: str, same_page: bool = False) -> str | None:
+    """Persist the exact response body and append its retrieval metadata."""
+    directory.mkdir(parents=True, exist_ok=True)
+    raw = page.get("_body_bytes") if page else None
+    digest = hashlib.sha256(raw).hexdigest() if raw is not None else None
+    stamp = datetime.fromisoformat(fetched_at.replace("Z", "+00:00")).astimezone(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
+    file_name = f"{stamp}_{hashlib.sha256(requested_url.encode('utf-8')).hexdigest()[:12]}.html" if raw is not None else None
+    if file_name:
+        (directory / file_name).write_bytes(raw)
+    status = page.get("_status", 200) if raw is not None else None
+    if raw is None and reason:
+        match = re.match(r"HTTP (\d+)", reason)
+        status = int(match.group(1)) if match else "error"
+    entry = {"requested_url": requested_url, "final_url": page.get("final_url", requested_url) if page else requested_url,
+             "status": status, "fetched_at": fetched_at, "sha256": digest, "file": file_name,
+             "page_revision": page.get("page_revision") if page else None, "same_page": same_page}
+    if reason:
+        entry["reason"] = reason
+    with (directory / "pages_index.jsonl").open("a", encoding="utf-8", newline="\n") as index:
+        index.write(json.dumps(entry, ensure_ascii=False) + "\n")
+    return file_name
+
+
+def _run_records(records: list[dict], pages: dict[str, dict], *, fetch_missing=False, timeout=12.0, ca_file: str | Path | None = None, save_pages_dir: Path | None = None) -> list[dict]:
     results = []
     for record in records:
         url = record.get("url", "")
@@ -430,53 +477,67 @@ def _run_records(records: list[dict], pages: dict[str, dict], *, fetch_missing=F
         page, page_match = find_saved_page(record, pages)
         reason = None
         fetched_at = None
+        saved_file = page.get("saved_file") if page else None
         if page is None and fetch_missing and url:
             fetched_at = iso_now()
             page, reason = fetch_page(url, timeout, ca_file)
+            fetched_page = page
+            is_same_page = False
             if page is not None:
                 final_url = page.get("final_url", url)
-                if not same_page_redirect(url, final_url, record, page):
+                is_same_page = same_page_redirect(url, final_url, record, page)
+                if not is_same_page:
                     reason = f"redirected to a different page; final URL: {final_url}"
                     page = None
                 else:
                     page_match = "fetched-url"
+            if save_pages_dir is not None:
+                saved_file = save_fetched_page(save_pages_dir, url, fetched_page, reason, fetched_at, is_same_page)
         result = quote_state(record, page, reason, fetch_missing)
         current_check = None
+        current_saved_file = None
         current_url = current_wikipedia_url(url) if fetch_missing else None
         if current_url:
-            fetched_at = fetched_at or iso_now()
+            current_fetched_at = iso_now()
             current_page, current_reason = fetch_page(current_url, timeout, ca_file)
+            current_fetched_page = current_page
+            current_is_same_page = False
             if current_page is not None:
                 final_url = current_page.get("final_url", current_url)
-                if not same_page_redirect(current_url, final_url, record, current_page):
+                current_is_same_page = same_page_redirect(current_url, final_url, record, current_page)
+                if not current_is_same_page:
                     current_reason = f"redirected to a different page; final URL: {final_url}"
                     current_page = None
+            if save_pages_dir is not None:
+                current_saved_file = save_fetched_page(save_pages_dir, current_url, current_fetched_page, current_reason, current_fetched_at, current_is_same_page)
             current_result = quote_state(record, current_page, current_reason, True)
-            current_check = {"state": current_result["state"], "reason": current_result["reason"]}
+            current_check = {"state": current_result["state"], "reason": current_result["reason"], "fetched_at": current_fetched_at}
+            if current_saved_file:
+                current_check["saved_file"] = current_saved_file
             if result["state"] == "URL 不一致" and current_check["state"] in ("本文一致", "ほぼ一致"):
                 result["reason"] += "; 引用は指定の版になく、現在の版にある（版の申告と食い違い）"
             elif result["state"] in ("本文一致", "ほぼ一致") and current_check["state"] == "URL 不一致":
                 current_check["reason"] += "; 引用は指定の版にあり、現在の版にはない（版の申告と食い違い）"
         results.append({"id": record.get("id"), "agent": record.get("agent"), "person": record.get("person"),
                         "url": url, "page_match": page_match, "accessed_at": record.get("accessed_at"),
-                        "fetched_at": fetched_at, "page_revision": page.get("page_revision") if page else None,
+                        "fetched_at": fetched_at, "saved_file": saved_file, "page_revision": page.get("page_revision") if page else None,
                         "current_revision": page.get("current_revision") if page else None,
                         "current_version_check": current_check, **result})
     return results
 
 
-def run(records: list[dict], pages: dict[str, dict], *, fetch_missing=False, timeout=12.0, ca_file: str | Path | None = None) -> list[dict]:
+def run(records: list[dict], pages: dict[str, dict], *, fetch_missing=False, timeout=12.0, ca_file: str | Path | None = None, save_pages_dir: Path | None = None) -> list[dict]:
     """Verify each record independently so an unexpected failure cannot abort a batch."""
     results = []
     for record in records:
         try:
             results.extend(_run_records([record], pages, fetch_missing=fetch_missing,
-                                        timeout=timeout, ca_file=ca_file))
+                                        timeout=timeout, ca_file=ca_file, save_pages_dir=save_pages_dir))
         except Exception as exc:
             results.append({"id": record.get("id"), "agent": record.get("agent"),
                             "person": record.get("person"), "url": record.get("url", ""),
                             "page_match": None, "accessed_at": record.get("accessed_at"),
-                            "fetched_at": None, "page_revision": None, "current_revision": None,
+                            "fetched_at": None, "saved_file": None, "page_revision": None, "current_revision": None,
                             "current_version_check": None, "state": "確認不能",
                             "reason": f"レコード処理で予期しない例外: {type(exc).__name__}: {str(exc)[:240]}",
                             "fragments": []})
@@ -485,12 +546,15 @@ def run(records: list[dict], pages: dict[str, dict], *, fetch_missing=False, tim
 
 def markdown_report(results: list[dict], inventory: list[dict], input_format: str) -> str:
     lines = ["# Quote verification report", "", f"- Tool version: `{VERSION}`", f"- Input format: `{input_format}`", "- Network fetching: disabled unless explicitly requested", "",
-             "## Results", "", "| ID | Agent | Candidate | URL | State | Reason | 申告の閲覧日時 | 取得日時 | 読んだ版 | 現在の版 | 現行版チェック |", "|---|---|---|---|---|---|---|---|---:|---:|---|"]
+             "## Results", "", "| ID | Agent | Candidate | URL | State | Reason | 申告の閲覧日時 | 取得日時 | 読んだ版 | 現在の版 | 保存ファイル | 現行版チェック |", "|---|---|---|---|---|---|---|---|---:|---:|---|---|"]
     for r in results:
         safe = lambda value: str(value or "").replace("|", "\\|").replace("\n", " ")
         check = r.get("current_version_check")
         check_text = f"{check['state']}: {check['reason']}" if check else ""
-        lines.append(f"| {safe(r['id'])} | {safe(r['agent'])} | {safe(r['person'])} | {safe(r['url'])} | {safe(r['state'])} | {safe(r['reason'])} | {safe(r.get('accessed_at'))} | {safe(r.get('fetched_at'))} | {safe(r.get('page_revision'))} | {safe(r.get('current_revision'))} | {safe(check_text)} |")
+        saved_text = safe(r.get("saved_file"))
+        if check and check.get("saved_file"):
+            saved_text += f"; current: {safe(check['saved_file'])}"
+        lines.append(f"| {safe(r['id'])} | {safe(r['agent'])} | {safe(r['person'])} | {safe(r['url'])} | {safe(r['state'])} | {safe(r['reason'])} | {safe(r.get('accessed_at'))} | {safe(r.get('fetched_at'))} | {safe(r.get('page_revision'))} | {safe(r.get('current_revision'))} | `{saved_text}` | {safe(check_text)} |")
     lines.extend(["", "## Fragment details", ""])
     for r in results:
         lines.append(f"### {r['id']} — {r['person']} ({r['state']})")
@@ -515,6 +579,7 @@ def main(argv=None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("input", type=Path, help="candidate JSON object, or legacy pairs.json")
     parser.add_argument("--pages-dir", type=Path, help="directory of saved .html/.htm pages")
+    parser.add_argument("--save-pages", type=Path, metavar="DIR", help="save fetched response bodies and append pages_index.jsonl in DIR")
     parser.add_argument("--json-out", type=Path, help="write machine-readable report")
     parser.add_argument("--markdown-out", type=Path, help="write human-readable report")
     parser.add_argument("--fetch-missing", action="store_true", help="make one ordinary HTTP request for URLs without a matching saved page; never bypass access controls")
@@ -524,7 +589,9 @@ def main(argv=None) -> int:
     try:
         records, input_format = read_input(args.input)
         pages, inventory = load_pages(args.pages_dir)
-        results = run(records, pages, fetch_missing=args.fetch_missing, timeout=args.timeout, ca_file=args.ca_file)
+        if args.save_pages and not args.fetch_missing:
+            parser.error("--save-pages requires --fetch-missing")
+        results = run(records, pages, fetch_missing=args.fetch_missing, timeout=args.timeout, ca_file=args.ca_file, save_pages_dir=args.save_pages)
         payload = {"tool_version": VERSION, "input_format": input_format, "fetch_missing": args.fetch_missing,
                    "saved_pages": inventory, "results": results}
         json_text = json.dumps(payload, ensure_ascii=False, indent=2) + "\n"

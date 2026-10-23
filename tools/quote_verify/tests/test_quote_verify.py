@@ -258,6 +258,89 @@ class QuoteVerifyUnitTests(unittest.TestCase):
         self.assertEqual(fmt, "legacy-pairs")
         self.assertEqual(records[0]["person"], "Person")
 
+    def test_fetch_saves_body_index_and_replays_requested_url_mapping(self):
+        url = "https://origin.example/old"
+        raw = b'<html><head><link rel="canonical" href="https://destination.example/new"></head><body>the retained quote text</body></html>'
+        page = parse_html(raw)
+        page.update({"final_url": url, "_body_bytes": raw, "_status": 200})
+        record = {"id": "saved", "agent": "test", "person": "Example", "url": url,
+                  "quotes": ["the retained quote text"], "verification_claim": "checked"}
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            input_path = root / "input.json"
+            output_path = root / "out.json"
+            markdown_path = root / "out.md"
+            pages_dir = root / "archive"
+            input_path.write_text(json.dumps([record]), encoding="utf-8")
+            with patch("quote_verify.fetch_page", return_value=(page, None)):
+                self.assertEqual(main([str(input_path), "--fetch-missing", "--save-pages", str(pages_dir),
+                                       "--json-out", str(output_path), "--markdown-out", str(markdown_path)]), 0)
+            payload = json.loads(output_path.read_text(encoding="utf-8"))
+            result = payload["results"][0]
+            self.assertTrue(result["state"])
+            self.assertRegex(result["saved_file"], r"^\d{8}T\d{6}Z_[0-9a-f]{12}\.html$")
+            self.assertEqual((pages_dir / result["saved_file"]).read_bytes(), raw)
+            entry = json.loads((pages_dir / "pages_index.jsonl").read_text(encoding="utf-8"))
+            self.assertEqual(entry["requested_url"], url)
+            self.assertEqual(entry["final_url"], url)
+            self.assertEqual(entry["sha256"], __import__("hashlib").sha256(raw).hexdigest())
+            self.assertEqual(entry["file"], result["saved_file"])
+            self.assertIn(result["saved_file"], markdown_path.read_text(encoding="utf-8"))
+            pages, _ = load_pages(pages_dir)
+            replay = run([record], pages)[0]
+            self.assertEqual(replay["state"], result["state"])
+            self.assertEqual(replay["saved_file"], result["saved_file"])
+
+    def test_failed_fetch_saves_only_index_entry_with_reason(self):
+        record = {"id": "forbidden", "agent": "test", "person": "Example", "url": "https://example.org/private",
+                  "quotes": ["the quote"], "verification_claim": "checked"}
+        with tempfile.TemporaryDirectory() as td:
+            pages_dir = Path(td) / "archive"
+            with patch("quote_verify.fetch_page", return_value=(None, "HTTP 403; access restrictions are not bypassed")):
+                result = run([record], {}, fetch_missing=True, save_pages_dir=pages_dir)[0]
+            self.assertEqual(result["saved_file"], None)
+            self.assertEqual(list(pages_dir.glob("*.html")), [])
+            entries = [json.loads(line) for line in (pages_dir / "pages_index.jsonl").read_text(encoding="utf-8").splitlines()]
+            self.assertEqual(len(entries), 1)
+            self.assertEqual(entries[0]["status"], 403)
+            self.assertIn("HTTP 403", entries[0]["reason"])
+            self.assertIsNone(entries[0]["file"])
+
+    def test_different_page_redirect_is_archived_but_not_replayed_for_requested_url(self):
+        url = "https://origin.example/article/target"
+        raw = b'<html><head><title>Maintenance</title></head><body>maintenance page</body></html>'
+        page = parse_html(raw)
+        page.update({"final_url": "https://other.example/maintenance", "_body_bytes": raw, "_status": 200})
+        record = {"id": "redirect", "agent": "test", "person": "Unrelated Person", "url": url,
+                  "quotes": ["a quote"], "verification_claim": "checked"}
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            input_path = root / "input.json"
+            output_path = root / "out.json"
+            pages_dir = root / "archive"
+            input_path.write_text(json.dumps([record]), encoding="utf-8")
+            with patch("quote_verify.fetch_page", return_value=(page, None)):
+                self.assertEqual(main([str(input_path), "--fetch-missing", "--save-pages", str(pages_dir),
+                                       "--json-out", str(output_path)]), 0)
+            entry = json.loads((pages_dir / "pages_index.jsonl").read_text(encoding="utf-8"))
+            self.assertFalse(entry["same_page"])
+            self.assertIsNotNone(entry["file"])
+            pages, _ = load_pages(pages_dir)
+            self.assertNotIn(normalize_url(url), pages)
+            replay = run([record], pages)[0]
+            self.assertEqual(replay["state"], "未照合")
+
+    def test_markdown_results_header_separator_and_rows_have_same_column_count(self):
+        record = {"id": "columns", "agent": "test", "person": "Person", "url": "https://example.org",
+                  "quotes": ["missing"], "verification_claim": "checked"}
+        result = run([record], {})[0]
+        report = markdown_report([result], [], "candidate-json")
+        results_section = report.split("## Results", 1)[1].split("## Fragment details", 1)[0]
+        table_lines = [line for line in results_section.splitlines() if line.startswith("|")]
+        counts = [line.count("|") - 1 for line in table_lines]
+        self.assertGreaterEqual(len(counts), 3)
+        self.assertEqual(len(set(counts)), 1)
+
 
 @unittest.skipUnless(EXTERNAL.is_dir(), "external experiment fixture is not available")
 class SavedFixtureRegression(unittest.TestCase):

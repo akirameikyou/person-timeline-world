@@ -39,6 +39,21 @@ When `--fetch-missing` is enabled for a Wikipedia URL containing `oldid=`, the s
 
 Candidate JSON may include `accessed_at` as a string or `null`. The report labels this as **申告の閲覧日時** and does not use it as evidence. `fetched_at` records the tool's UTC time when it makes a network request; it is `null` when no request was made.
 
+## Archive fetched pages
+
+Use `--save-pages DIR` together with `--fetch-missing` to archive the exact response bytes for each fetched primary URL and, for Wikipedia `oldid` records, the separately fetched current revision:
+
+```powershell
+python tools/quote_verify/quote_verify.py candidates.json --fetch-missing `
+  --save-pages C:\quote-page-archive `
+  --json-out quote-verification.json `
+  --markdown-out quote-verification.md
+```
+
+The directory is created when needed. Each successful response is saved as `<UTC yyyymmddThhmmssZ>_<requested URL SHA-256 first 12 hex>.html`; `pages_index.jsonl` is appended with the requested and final URLs, HTTP status, fetch time, body SHA-256, file name, MediaWiki page revision, and `same_page` redirect decision. Failed requests add an index entry with the status and reason, without creating an HTML file. Result records include `saved_file` (the current Wikipedia retrieval is listed under `current_version_check.saved_file`).
+
+Pass that archive to `--pages-dir DIR` for an offline replay. The index maps the original requested URL to the archived file only when `same_page` is true. Responses redirected to another page remain in the archive and index for review, but are not used to match the requested URL. Canonical and `og:url` matching still work for ordinary saved pages. Keep the archive outside the repository: these are third-party site pages and should not be added to a public repository.
+
 ## New input format
 
 One citation/source URL per record; a person can have multiple records if they cite multiple pages. Keep the submitter's check claim distinct from this tool's result. See `candidate.schema.json` for validation.
